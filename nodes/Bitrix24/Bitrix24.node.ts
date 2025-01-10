@@ -19,14 +19,67 @@ interface IBitrix24Field {
 	isDynamic: boolean;
 	title: string;
 	statusType?: string;
+	formLabel?: string;
+	listLabel?: string;
+	filterLabel?: string;
+	items?: Array<{
+		ID: string;
+		VALUE: string;
+		DEF: string;
+		SORT: string;
+	}>;
+	settings?: {
+		DISPLAY?: string;
+		LIST_HEIGHT?: number;
+		CAPTION_NO_VALUE?: string;
+		SHOW_NO_VALUE?: string;
+		SIZE?: number;
+		ROWS?: number;
+		REGEXP?: string;
+		MIN_LENGTH?: number;
+		MAX_LENGTH?: number;
+		DEFAULT_VALUE?: string | null;
+	};
 	[key: string]: unknown;
 }
 
+interface IEnumValue {
+	name: string;
+	value: string;
+}
+
 export class Bitrix24 implements INodeType {
+	private static formatCommunicationField(value: string, type: string): { VALUE: string; TYPE: string }[] {
+		return [{ VALUE: value, TYPE: type }];
+	}
+
+	private static processFormFields(fieldsCollection: Array<{ fieldName: string; fieldValue: string; field?: IBitrix24Field }>): IDataObject {
+		const fields: IDataObject = {};
+		
+		for (const field of fieldsCollection) {
+			if (field.fieldName === 'PHONE') {
+				fields[field.fieldName] = Bitrix24.formatCommunicationField(field.fieldValue, 'WORK');
+			} else if (field.fieldName === 'EMAIL') {
+				fields[field.fieldName] = Bitrix24.formatCommunicationField(field.fieldValue, 'WORK');
+			} else if (field.field?.type === 'enumeration' && field.field.items && Array.isArray(field.field.items)) {
+				// Для полей типа enumeration передаем ID выбранного значения
+				const selectedOption = field.field.items.find(item => item.VALUE === field.fieldValue);
+				if (selectedOption) {
+					fields[field.fieldName] = selectedOption.ID;
+				}
+			} else {
+				fields[field.fieldName] = field.fieldValue;
+			}
+		}
+		
+		return fields;
+	}
+
 	description: INodeTypeDescription = {
 		displayName: 'Bitrix24',
 		name: 'bitrix24',
 		icon: 'file:bitrix24.svg',
+		
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
@@ -123,6 +176,44 @@ export class Bitrix24 implements INodeType {
 				},
 				description: 'ID записи',
 			},
+			// Выбор формата ввода полей
+			{
+				displayName: 'Input Format',
+				name: 'inputFormat',
+				type: 'options',
+				options: [
+					{
+						name: 'Form',
+						value: 'form',
+						description: 'Использовать форму для ввода полей',
+					},
+					{
+						name: 'JSON',
+						value: 'json',
+						description: 'Использовать JSON формат для ввода полей',
+					},
+				],
+				default: 'form',
+				displayOptions: {
+					show: {
+						operation: ['create', 'update'],
+					},
+				},
+			},
+			// JSON поля
+			{
+				displayName: 'Fields (JSON)',
+				name: 'fieldsJson',
+				type: 'json',
+				default: '{}',
+				description: 'Поля в формате JSON',
+				displayOptions: {
+					show: {
+						operation: ['create', 'update'],
+						inputFormat: ['json'],
+					},
+				},
+			},
 			// Поля для создания и обновления
 			{
 				displayName: 'Fields',
@@ -152,7 +243,29 @@ export class Bitrix24 implements INodeType {
 							{
 								displayName: 'Field Value',
 								name: 'fieldValue',
+								type: 'options',
+								typeOptions: {
+									loadOptionsMethod: 'getEnumValues',
+									loadOptionsDependsOn: ['fieldName'],
+								},
+								displayOptions: {
+									show: {
+										'/operation': ['create', 'update'],
+										'fieldName': ['UF_CRM_1736516348'], // Здесь нужно динамически добавлять все поля типа enumeration
+									},
+								},
+								default: '',
+								description: 'Значение поля',
+							},
+							{
+								displayName: 'Field Value',
+								name: 'fieldValue',
 								type: 'string',
+								displayOptions: {
+									hide: {
+										'fieldName': ['UF_CRM_1736516348'], // Здесь нужно динамически добавлять все поля типа enumeration
+									},
+								},
 								default: '',
 								description: 'Значение поля',
 							},
@@ -163,6 +276,7 @@ export class Bitrix24 implements INodeType {
 				displayOptions: {
 					show: {
 						operation: ['create', 'update'],
+						inputFormat: ['form'],
 					},
 				},
 			},
@@ -227,7 +341,7 @@ export class Bitrix24 implements INodeType {
 						throw new NodeOperationError(this.getNode(), 'Webhook URL is required!');
 					}
 					
-					const endpoint = `${webhookUrl}crm.${resource}.fields.json`;
+					const endpoint = `${webhookUrl}crm.${resource}.fields`;
 					const response = await axios.get(endpoint);
 					
 					if (!response.data || !response.data.result) {
@@ -238,6 +352,7 @@ export class Bitrix24 implements INodeType {
 					const options: INodePropertyOptions[] = [];
 					
 					for (const [key, value] of Object.entries(fields)) {
+						const fieldName = value.formLabel || value.listLabel || value.title || key;
 						const description = [
 							`Тип: ${value.type}`,
 							value.isRequired ? 'Обязательное' : 'Необязательное',
@@ -246,7 +361,7 @@ export class Bitrix24 implements INodeType {
 						].join(', ');
 
 						options.push({
-							name: value.title,
+							name: fieldName,
 							value: key,
 							description,
 						});
@@ -258,6 +373,81 @@ export class Bitrix24 implements INodeType {
 						throw error;
 					}
 					throw new NodeOperationError(this.getNode(), 'Failed to load fields: ' + (error as Error).message);
+				}
+			},
+
+			async getEnumValues(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				try {
+					const credentials = await this.getCredentials('bitrix24Api');
+					if (!credentials) {
+						throw new NodeOperationError(this.getNode(), 'No credentials got returned!');
+					}
+
+					const resource = this.getCurrentNodeParameter('resource') as string;
+					const fieldsData = this.getCurrentNodeParameter('fields') as { field: Array<{ fieldName: string; fieldValue: string }> };
+					const fieldName = fieldsData?.field?.[0]?.fieldName;
+					const webhookUrl = credentials.webhookUrl as string;
+					
+					// console.log('Fields:', fieldsData);
+					// console.log('Field Name:', fieldName);
+					// console.log('Resource:', resource);
+
+					if (!webhookUrl) {
+						throw new NodeOperationError(this.getNode(), 'Webhook URL is required!');
+					}
+					
+					if (!fieldName) {
+						return [
+							{
+								name: '- Выберите поле -',
+								value: '',
+								description: 'Сначала выберите поле',
+							},
+						];
+					}
+					
+					const endpoint = `${webhookUrl}crm.${resource}.fields`;
+					const response = await axios.get(endpoint);
+					
+					if (!response.data || !response.data.result) {
+						throw new NodeOperationError(this.getNode(), 'Invalid response from Bitrix24!');
+					}
+
+					const fieldsInfo = response.data.result as Record<string, IBitrix24Field>;
+					const field = fieldsInfo[fieldName];
+
+					if (!field) {
+						console.log('Field not found in response');
+						return [
+							{
+								name: '- Поле не найдено -',
+								value: '',
+								description: 'Поле не найдено в ответе Bitrix24',
+							},
+						];
+					}
+
+					if (field.type === 'enumeration' && field.items && Array.isArray(field.items)) {
+						return field.items.map((item: { ID: string; VALUE: string }) => ({
+							name: item.VALUE,
+							value: item.VALUE,
+							description: `ID: ${item.ID}`,
+						}));
+					}
+
+					return [
+						{
+							name: '- Текстовое поле -',
+							value: '',
+							description: 'Используйте текстовое поле для ввода значения',
+						},
+					];
+				} catch (error) {
+					console.error('Error in getEnumValues:', error);
+					if (error instanceof NodeOperationError) {
+						throw error;
+					}
+					throw new NodeOperationError(this.getNode(), 'Failed to load enum values: ' + (error as Error).message);
 				}
 			},
 		},
@@ -282,19 +472,40 @@ export class Bitrix24 implements INodeType {
 
 			for (let i = 0; i < items.length; i++) {
 				try {
-					if (operation === 'create') {
-						const endpoint = `${webhookUrl}crm.${resource}.add.json`;
-						const fieldsCollection = this.getNodeParameter('fields.field', i, []) as Array<{
-							fieldName: string;
-							fieldValue: string;
-						}>;
-						
-						const fields: IDataObject = {};
-						for (const field of fieldsCollection) {
-							fields[field.fieldName] = field.fieldValue;
+					if (operation === 'create' || operation === 'update') {
+						const endpoint = `${webhookUrl}crm.${resource}.${operation === 'create' ? 'add' : 'update'}.json`;
+						const inputFormat = this.getNodeParameter('inputFormat', i) as string;
+						let fields: IDataObject = {};
+
+						if (inputFormat === 'json') {
+							const fieldsJson = this.getNodeParameter('fieldsJson', i) as string;
+							fields = JSON.parse(fieldsJson);
+						} else {
+							// Получаем информацию о полях
+							const fieldsEndpoint = `${webhookUrl}crm.${resource}.fields.json`;
+							const fieldsResponse = await axios.get(fieldsEndpoint);
+							const fieldsInfo = fieldsResponse.data.result as Record<string, IBitrix24Field>;
+
+							const fieldsCollection = this.getNodeParameter('fields.field', i, []) as Array<{
+								fieldName: string;
+								fieldValue: string;
+							}>;
+
+							// Добавляем информацию о поле к каждому элементу коллекции
+							const enrichedFieldsCollection = fieldsCollection.map(field => ({
+								...field,
+								field: fieldsInfo[field.fieldName],
+							}));
+
+							fields = Bitrix24.processFormFields(enrichedFieldsCollection);
 						}
 						
-						const response = await axios.post(endpoint, { fields });
+						const params: IDataObject = { fields };
+						if (operation === 'update') {
+							params.id = this.getNodeParameter('id', i) as string;
+						}
+
+						const response = await axios.post(endpoint, params);
 						returnData.push(response.data);
 					}
 					
@@ -330,23 +541,6 @@ export class Bitrix24 implements INodeType {
 						
 						const response = await axios.post(endpoint, params);
 						returnData.push(...response.data.result);
-					}
-					
-					if (operation === 'update') {
-						const id = this.getNodeParameter('id', i) as string;
-						const fieldsCollection = this.getNodeParameter('fields.field', i, []) as Array<{
-							fieldName: string;
-							fieldValue: string;
-						}>;
-						
-						const fields: IDataObject = {};
-						for (const field of fieldsCollection) {
-							fields[field.fieldName] = field.fieldValue;
-						}
-						
-						const endpoint = `${webhookUrl}crm.${resource}.update.json`;
-						const response = await axios.post(endpoint, { id, fields });
-						returnData.push(response.data);
 					}
 					
 					if (operation === 'delete') {
