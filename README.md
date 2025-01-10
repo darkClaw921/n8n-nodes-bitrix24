@@ -1,46 +1,105 @@
-![Banner image](https://user-images.githubusercontent.com/10284570/173569848-c624317f-42b1-45a6-ab09-f0ea3c247648.png)
+# n8n-nodes-bitrix24
 
-# n8n-nodes-starter
+Этот пакет содержит ноду для n8n для работы с Bitrix24 API.
 
-This repo contains example nodes to help you get started building your own custom integrations for [n8n](n8n.io). It includes the node linter and other dependencies.
+## Установка
 
-To make your custom node available to the community, you must create it as an npm package, and [submit it to the npm registry](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry).
+### В существующую установку n8n
 
-## Prerequisites
+```bash
+cd /usr/local/lib/node_modules/n8n
+npm install n8n-nodes-bitrix24
+```
 
-You need the following installed on your development machine:
+### Обновление модуля
 
-* [git](https://git-scm.com/downloads)
-* Node.js and pnpm. Minimum version Node 18. You can find instructions on how to install both using nvm (Node Version Manager) for Linux, Mac, and WSL [here](https://github.com/nvm-sh/nvm). For Windows users, refer to Microsoft's guide to [Install NodeJS on Windows](https://docs.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-windows).
-* Install n8n with:
-  ```
-  pnpm install n8n -g
-  ```
-* Recommended: follow n8n's guide to [set up your development environment](https://docs.n8n.io/integrations/creating-nodes/build/node-development-environment/).
+Для полного обновления модуля выполните следующие команды:
 
-## Using this starter
+```bash
+# 1. Остановить n8n
+pm2 stop n8n  # или systemctl stop n8n
 
-These are the basic steps for working with the starter. For detailed guidance on creating and publishing nodes, refer to the [documentation](https://docs.n8n.io/integrations/creating-nodes/).
+# 2. Перейти в директорию n8n
+cd /usr/local/lib/node_modules/n8n
 
-1. [Generate a new repository](https://github.com/n8n-io/n8n-nodes-starter/generate) from this template repository.
-2. Clone your new repo:
-   ```
-   git clone https://github.com/<your organization>/<your-repo-name>.git
-   ```
-3. Run `pnpm i` to install dependencies.
-4. Open the project in your editor.
-5. Browse the examples in `/nodes` and `/credentials`. Modify the examples, or replace them with your own nodes.
-6. Update the `package.json` to match your details.
-7. Run `pnpm lint` to check for errors or `pnpm lintfix` to automatically fix errors when possible.
-8. Test your node locally. Refer to [Run your node locally](https://docs.n8n.io/integrations/creating-nodes/test/run-node-locally/) for guidance.
-9. Replace this README with documentation for your node. Use the [README_TEMPLATE](README_TEMPLATE.md) to get started.
-10. Update the LICENSE file to use your details.
-11. [Publish](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry) your package to npm.
+# 3. Удалить старую версию модуля
+npm uninstall n8n-nodes-bitrix24
 
-## More information
+# 4. Очистить кэш npm
+npm cache clean --force
 
-Refer to our [documentation on creating nodes](https://docs.n8n.io/integrations/creating-nodes/) for detailed information on building your own nodes.
+# 5. Установить новую версию модуля
+npm install n8n-nodes-bitrix24@latest
 
-## License
+# 6. Запустить n8n
+pm2 start n8n  # или systemctl start n8n
+```
 
-[MIT](https://github.com/n8n-io/n8n-nodes-starter/blob/master/LICENSE.md)
+### Для разработки
+
+1. Клонируйте репозиторий
+2. Установите зависимости: `npm install`
+3. Соберите проект: `npm run build`
+4. Создайте символическую ссылку: `npm link`
+5. В директории n8n: `npm link n8n-nodes-bitrix24`
+
+## Использование
+
+1. В Bitrix24 создайте входящий вебхук (REST API)
+2. Скопируйте URL вебхука
+3. В n8n добавьте новые учетные данные типа "Bitrix24 API"
+4. Вставьте URL вебхука в поле "Webhook URL"
+5. Используйте ноду Bitrix24 в ваших рабочих процессах
+
+## Функциональность
+
+### Поддерживаемые сущности (Resources)
+- Lead (Лиды)
+- Deal (Сделки)
+- Contact (Контакты)
+- Company (Компании)
+
+### Операции
+- Create (Создание записи)
+  - Выбор поля из списка доступных
+  - Установка значения поля
+- Get (Получение записи)
+  - Получение по ID
+  - Выбор возвращаемых полей
+- List (Получение списка)
+  - Возможность получить все записи
+  - Ограничение количества записей
+  - Выбор возвращаемых полей
+- Update (Обновление)
+  - Обновление по ID
+  - Выбор поля из списка доступных
+  - Установка нового значения
+- Delete (Удаление)
+  - Удаление по ID
+
+### Особенности
+- Динамическая загрузка полей в зависимости от выбранной сущности
+- Подробная информация о каждом поле (тип, обязательность, только для чтения, множественность)
+- Поддержка пагинации при получении списка записей
+- Обработка ошибок и возможность продолжить выполнение при ошибках
+
+## Разработка
+
+### Сборка
+```bash
+npm run build
+```
+
+### Запуск в режиме разработки
+```bash
+npm run dev
+```
+
+### Линтинг
+```bash
+npm run lint
+```
+
+## Лицензия
+
+[MIT](LICENSE) 

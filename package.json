@@ -1,59 +1,63 @@
 {
   "name": "n8n-nodes-bitrix24",
-  "version": "0.1.0",
-  "description": "Bitrix24 нода для n8n",
+  "version": "0.10.0",
+  "description": "n8n node для работы с Bitrix24 API",
   "keywords": [
-    "n8n-community-node-package"
+    "n8n-community-node-package",
+    "n8n",
+    "bitrix24",
+    "crm"
   ],
   "license": "MIT",
-  "homepage": "",
+  "homepage": "https://github.com/darkClaw921/n8n-nodes-bitrix24.git",
   "author": {
     "name": "Igor Gerasimov",
-    "email": "gerasimov.igor.98@yandex.ru"
+    "email": "gerasimov.igor.98@yandex.ru",
+    "url": "https://github.com/darkClaw921"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/bitrix24/n8n-nodes-bitrix24.git"
+    "url": "git+https://github.com/darkClaw921/n8n-nodes-bitrix24.git"
   },
-  "engines": {
-    "node": ">=18.10",
-    "pnpm": ">=9.1"
-  },
-  "packageManager": "pnpm@9.1.4",
   "main": "index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "preinstall": "npx only-allow pnpm",
     "build": "tsc && gulp build:icons",
     "dev": "tsc --watch",
     "format": "prettier nodes credentials --write",
     "lint": "eslint nodes credentials package.json",
     "lintfix": "eslint nodes credentials package.json --fix",
-    "prepublishOnly": "pnpm build && pnpm lint -c .eslintrc.prepublish.js nodes credentials package.json"
+    "prepublishOnly": "npm run build"
   },
   "files": [
-    "dist"
+    "dist",
+    "index.js"
   ],
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "dist/credentials/ExampleCredentialsApi.credentials.js",
-      "dist/credentials/HttpBinApi.credentials.js"
+      "dist/credentials/Bitrix24Api.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/ExampleNode/ExampleNode.node.js",
-      "dist/nodes/HttpBin/HttpBin.node.js"
+      "dist/nodes/Bitrix24/Bitrix24.node.js"
     ]
   },
   "devDependencies": {
-    "@typescript-eslint/parser": "^7.15.0",
-    "eslint": "^8.56.0",
-    "eslint-plugin-n8n-nodes-base": "^1.16.1",
+    "@types/express": "^4.17.6",
+    "@types/request-promise-native": "~1.0.15",
+    "@typescript-eslint/parser": "~5.45",
+    "eslint-plugin-n8n-nodes-base": "^1.0.0",
     "gulp": "^4.0.2",
-    "n8n-workflow": "*",
-    "prettier": "^3.3.2",
-    "typescript": "^5.5.3"
+    "n8n-core": "0.125.0",
+    "n8n-workflow": "0.107.0",
+    "prettier": "^2.7.1",
+    "typescript": "~4.8.4"
+  },
+  "dependencies": {
+    "axios": "^1.2.1"
   },
   "peerDependencies": {
-    "n8n-workflow": "*"
+    "n8n-core": ">=0.125.0",
+    "n8n-workflow": ">=0.107.0"
   }
 }
