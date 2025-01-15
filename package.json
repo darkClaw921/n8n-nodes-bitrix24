@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-bitrix24",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "n8n node для работы с Bitrix24 API",
   "keywords": [
     "n8n-community-node-package",
@@ -39,7 +39,8 @@
       "dist/credentials/Bitrix24Api.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/Bitrix24/Bitrix24.node.js"
+      "dist/nodes/Bitrix24/Bitrix24.node.js",
+      "dist/nodes/Bitrix24UserField/Bitrix24UserField.node.js"
     ]
   },
   "devDependencies": {
