@@ -230,7 +230,7 @@ export class Bitrix24 implements INodeType {
 									name: 'operation',
 									type: 'options',
 									options: [
-										{ name: 'Equals', value: '=' },
+										{ name: 'Equals', value: 'equals' },
 										{ name: 'Not Equals', value: '!=' },
 										{ name: 'Greater Than', value: '>' },
 										{ name: 'Greater Than or Equal', value: '>=' },
@@ -243,7 +243,7 @@ export class Bitrix24 implements INodeType {
 										{ name: 'In List', value: '@' },
 										{ name: 'Not In List', value: '!@' },
 									],
-									default: '=',
+									default: 'equals',
 									description: 'Операция сравнения',
 								},
 								{
@@ -621,7 +621,7 @@ export class Bitrix24 implements INodeType {
 
 						if (getBy === 'id') {
 							const id = this.getNodeParameter('id', i) as string;
-							params.filter = { '=ID': id };
+							params.filter = { 'ID': id };
 						} else {
 							const filterFields = this.getNodeParameter('filterFields.field', i, []) as Array<{
 								fieldName: string;
@@ -630,19 +630,25 @@ export class Bitrix24 implements INodeType {
 							}>;
 
 							if (filterFields.length > 0) {
-								params.filter = {};
+								const filter: IDataObject = {};
+								
 								for (const field of filterFields) {
-									const key = `${field.operation}${field.fieldName}`;
 									let value = field.value;
 
 									// Обработка специальных операторов
 									if (field.operation === '@' || field.operation === '!@') {
-										// Преобразование строки в массив для операторов IN и NOT IN
 										value = value.split(',').map(item => item.trim()) as unknown as string;
 									}
 
-									(params.filter as IDataObject)[key] = value;
+									// Формируем ключ фильтра в зависимости от операции
+									if (field.operation === 'equals') {
+										filter[field.fieldName] = value;
+									} else {
+										filter[field.operation + field.fieldName] = value;
+									}
 								}
+
+								params.filter = filter;
 							}
 						}
 
