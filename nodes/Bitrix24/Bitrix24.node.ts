@@ -164,6 +164,29 @@ export class Bitrix24 implements INodeType {
 			},
 			// ID поле
 			{
+				displayName: 'Get By',
+				name: 'getBy',
+				type: 'options',
+				options: [
+					{
+						name: 'ID',
+						value: 'id',
+						description: 'Получить по ID',
+					},
+					{
+						name: 'Filter',
+						value: 'filter',
+						description: 'Получить по фильтру',
+					},
+				],
+				default: 'id',
+				displayOptions: {
+					show: {
+						operation: ['get'],
+					},
+				},
+			},
+			{
 				displayName: 'ID',
 				name: 'id',
 				type: 'string',
@@ -171,7 +194,84 @@ export class Bitrix24 implements INodeType {
 				required: true,
 				displayOptions: {
 					show: {
-						operation: ['get', 'update', 'delete'],
+						operation: ['get'],
+						getBy: ['id'],
+					},
+				},
+				description: 'ID записи',
+			},
+			{
+				displayName: 'Filter Fields',
+				name: 'filterFields',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+					sortable: true,
+				},
+					placeholder: 'Add Filter Field',
+					default: {},
+					options: [
+						{
+							name: 'field',
+							displayName: 'Field',
+							values: [
+								{
+									displayName: 'Field Name',
+									name: 'fieldName',
+									type: 'options',
+									typeOptions: {
+										loadOptionsMethod: 'getFields',
+									},
+									default: '',
+									description: 'Имя поля для фильтрации',
+								},
+								{
+									displayName: 'Operation',
+									name: 'operation',
+									type: 'options',
+									options: [
+										{ name: 'Equals', value: '=' },
+										{ name: 'Not Equals', value: '!=' },
+										{ name: 'Greater Than', value: '>' },
+										{ name: 'Greater Than or Equal', value: '>=' },
+										{ name: 'Less Than', value: '<' },
+										{ name: 'Less Than or Equal', value: '<=' },
+										{ name: 'Contains', value: '%' },
+										{ name: 'Not Contains', value: '!%' },
+										{ name: 'Starts With', value: '=%' },
+										{ name: 'Ends With', value: '%=' },
+										{ name: 'In List', value: '@' },
+										{ name: 'Not In List', value: '!@' },
+									],
+									default: '=',
+									description: 'Операция сравнения',
+								},
+								{
+									displayName: 'Value',
+									name: 'value',
+									type: 'string',
+									default: '',
+									description: 'Значение для фильтрации',
+								},
+							],
+						},
+					],
+					displayOptions: {
+						show: {
+							operation: ['get'],
+							getBy: ['filter'],
+						},
+					},
+			},
+			{
+				displayName: 'ID',
+				name: 'id',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						operation: ['update', 'delete'],
 					},
 				},
 				description: 'ID записи',
@@ -510,17 +610,48 @@ export class Bitrix24 implements INodeType {
 					}
 					
 					if (operation === 'get') {
-						const id = this.getNodeParameter('id', i) as string;
+						const getBy = this.getNodeParameter('getBy', i) as string;
+						const endpoint = `${webhookUrl}crm.${resource}.list.json`;
 						const selectFields = this.getNodeParameter('selectFields', i, []) as string[];
-						const endpoint = `${webhookUrl}crm.${resource}.get.json`;
 						
-						const params: IDataObject = { id };
+						const params: IDataObject = {};
 						if (selectFields.length > 0) {
 							params.select = selectFields;
 						}
-						
+
+						if (getBy === 'id') {
+							const id = this.getNodeParameter('id', i) as string;
+							params.filter = { '=ID': id };
+						} else {
+							const filterFields = this.getNodeParameter('filterFields.field', i, []) as Array<{
+								fieldName: string;
+								operation: string;
+								value: string;
+							}>;
+
+							if (filterFields.length > 0) {
+								params.filter = {};
+								for (const field of filterFields) {
+									const key = `${field.operation}${field.fieldName}`;
+									let value = field.value;
+
+									// Обработка специальных операторов
+									if (field.operation === '@' || field.operation === '!@') {
+										// Преобразование строки в массив для операторов IN и NOT IN
+										value = value.split(',').map(item => item.trim()) as unknown as string;
+									}
+
+									(params.filter as IDataObject)[key] = value;
+								}
+							}
+						}
+
 						const response = await axios.post(endpoint, params);
-						returnData.push(response.data);
+						if (response.data.result && response.data.result.length > 0) {
+							returnData.push(response.data.result[0]);
+						} else {
+							returnData.push({ error: 'Запись не найдена' });
+						}
 					}
 
 					if (operation === 'list') {
