@@ -1,5 +1,5 @@
-import type { IExecuteFunctions } from 'n8n-core';
-import type {
+import { IExecuteFunctions } from 'n8n-core';
+import {
 	IDataObject,
 	INodeExecutionData,
 	INodeType,
@@ -73,6 +73,43 @@ export class Bitrix24 implements INodeType {
 		}
 		
 		return fields;
+	}
+
+	private static async getAllItems(
+		endpoint: string,
+		params: IDataObject,
+		maxBatchSize: number = 50
+	): Promise<IDataObject[]> {
+		const allItems: IDataObject[] = [];
+		let start = 0;
+		let hasMore = true;
+
+		while (hasMore) {
+			const batchParams = {
+				...params,
+				start,
+			};
+
+			const response = await axios.post(endpoint, batchParams);
+			const items = response.data.result;
+
+			if (!Array.isArray(items) || items.length === 0) {
+				hasMore = false;
+				break;
+			}
+
+			allItems.push(...items);
+
+			if (items.length < maxBatchSize) {
+				hasMore = false;
+			} else {
+				start += maxBatchSize;
+				// Добавляем задержку между запросами для соблюдения ограничений API
+				await new Promise(resolve => setTimeout(resolve, 1000));
+			}
+		}
+
+		return allItems;
 	}
 
 	description: INodeTypeDescription = {
@@ -406,6 +443,81 @@ export class Bitrix24 implements INodeType {
 					},
 				},
 			},
+			{
+				displayName: 'Use Filter',
+				name: 'useFilter',
+				type: 'boolean',
+				default: false,
+				description: 'Использовать фильтрацию записей',
+				displayOptions: {
+					show: {
+						operation: ['list'],
+					},
+				},
+			},
+			{
+				displayName: 'Filter Fields',
+				name: 'filterFields',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+					sortable: true,
+				},
+				placeholder: 'Add Filter Field',
+				default: {},
+				options: [
+					{
+						name: 'field',
+						displayName: 'Field',
+						values: [
+							{
+								displayName: 'Field Name',
+								name: 'fieldName',
+								type: 'options',
+								typeOptions: {
+									loadOptionsMethod: 'getFields',
+								},
+								default: '',
+								description: 'Имя поля для фильтрации',
+							},
+							{
+								displayName: 'Operation',
+								name: 'operation',
+								type: 'options',
+								options: [
+									{ name: 'Equals', value: 'equals' },
+									{ name: 'Not Equals', value: '!=' },
+									{ name: 'Greater Than', value: '>' },
+									{ name: 'Greater Than or Equal', value: '>=' },
+									{ name: 'Less Than', value: '<' },
+									{ name: 'Less Than or Equal', value: '<=' },
+									{ name: 'Contains', value: '%' },
+									{ name: 'Not Contains', value: '!%' },
+									{ name: 'Starts With', value: '=%' },
+									{ name: 'Ends With', value: '%=' },
+									{ name: 'In List', value: '@' },
+									{ name: 'Not In List', value: '!@' },
+								],
+								default: 'equals',
+								description: 'Операция сравнения',
+							},
+							{
+								displayName: 'Value',
+								name: 'value',
+								type: 'string',
+								default: '',
+								description: 'Значение для фильтрации',
+							},
+						],
+					},
+				],
+				displayOptions: {
+					show: {
+						operation: ['list'],
+						useFilter: [true],
+					},
+				},
+			},
 			// Выбор полей для получения
 			{
 				displayName: 'Select Fields',
@@ -663,21 +775,56 @@ export class Bitrix24 implements INodeType {
 					if (operation === 'list') {
 						const returnAll = this.getNodeParameter('returnAll', i) as boolean;
 						const selectFields = this.getNodeParameter('selectFields', i, []) as string[];
+						const useFilter = this.getNodeParameter('useFilter', i) as boolean;
 						const endpoint = `${webhookUrl}crm.${resource}.list.json`;
 						
 						const params: IDataObject = {};
 						if (selectFields.length > 0) {
 							params.select = selectFields;
 						}
+
+						// Добавляем обработку фильтров
+						if (useFilter) {
+							const filterFields = this.getNodeParameter('filterFields.field', i, []) as Array<{
+								fieldName: string;
+								operation: string;
+								value: string;
+							}>;
+
+							if (filterFields.length > 0) {
+								const filter: IDataObject = {};
+								
+								for (const field of filterFields) {
+									let value = field.value;
+
+									// Обработка специальных операторов
+									if (field.operation === '@' || field.operation === '!@') {
+										value = value.split(',').map(item => item.trim()) as unknown as string;
+									}
+
+									// Формируем ключ фильтра в зависимости от операции
+									if (field.operation === 'equals') {
+										filter[field.fieldName] = value;
+									} else {
+										filter[field.operation + field.fieldName] = value;
+									}
+								}
+
+								params.filter = filter;
+							}
+						}
 						
 						if (!returnAll) {
 							const limit = this.getNodeParameter('limit', i) as number;
 							params.start = 0;
 							params.limit = limit;
+							const response = await axios.post(endpoint, params);
+							returnData.push(...response.data.result);
+						} else {
+							// Получаем все записи с пагинацией
+							const allItems = await Bitrix24.getAllItems(endpoint, params);
+							returnData.push(...allItems);
 						}
-						
-						const response = await axios.post(endpoint, params);
-						returnData.push(...response.data.result);
 					}
 					
 					if (operation === 'delete') {

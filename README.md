@@ -103,4 +103,5 @@ npm run lint
 
 ## Лицензия
 
-[MIT](LICENSE) 
+[MIT](LICENSE)
+ 

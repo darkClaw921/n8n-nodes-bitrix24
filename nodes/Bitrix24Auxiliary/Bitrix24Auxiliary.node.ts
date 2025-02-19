@@ -1,9 +1,11 @@
-import type { IExecuteFunctions } from 'n8n-core';
-import type {
+import { IExecuteFunctions } from 'n8n-core';
+import {
 	IDataObject,
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
+	INodePropertyOptions,
+	ILoadOptionsFunctions,
 } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
 import axios, { AxiosError } from 'axios';
