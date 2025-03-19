@@ -1,5 +1,7 @@
 # n8n-nodes-bitrix24
 
+![npm](https://img.shields.io/npm/dm/n8n-nodes-bitrix24)
+
 Этот пакет содержит ноду для n8n для работы с Bitrix24 API.
 
 ## Установка
@@ -50,6 +52,8 @@ pm2 start n8n  # или systemctl start n8n
 3. В n8n добавьте новые учетные данные типа "Bitrix24 API"
 4. Вставьте URL вебхука в поле "Webhook URL"
 5. Используйте ноду Bitrix24 в ваших рабочих процессах
+
+![example](example.png)
 
 ## Функциональность
 
