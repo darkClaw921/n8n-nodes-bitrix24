@@ -74,7 +74,7 @@ docker run -it --rm \
   --name n8n \
   -p 5678:5678 \
   -v n8n_data:/home/node/.n8n \
-  -v  /Users/igorgerasimov/cursorWorkspace/n8n-nodes/bitrix24-n8n/n8n-nodes-bitrix24/dist:/home/node/.n8n/custom/node_modules//n8n-nodes-bitrix24 \ docker.n8n.io/n8nio/n8n
+  -v  /{path_to_n8n_nodes}/n8n-nodes-bitrix24/dist:/home/node/.n8n/custom/node_modules//n8n-nodes-bitrix24 \ docker.n8n.io/n8nio/n8n
 ```
   -v -подключаем ноды
 
