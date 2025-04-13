@@ -10,109 +10,17 @@ import {
 import { NodeOperationError } from 'n8n-workflow';
 import axios, { AxiosError } from 'axios';
 
-interface IBitrix24Field {
-	type: string;
-	isRequired: boolean;
-	isReadOnly: boolean;
-	isImmutable: boolean;
-	isMultiple: boolean;
-	isDynamic: boolean;
-	title: string;
-	statusType?: string;
-	formLabel?: string;
-	listLabel?: string;
-	filterLabel?: string;
-	items?: Array<{
-		ID: string;
-		VALUE: string;
-		DEF: string;
-		SORT: string;
-	}>;
-	settings?: {
-		DISPLAY?: string;
-		LIST_HEIGHT?: number;
-		CAPTION_NO_VALUE?: string;
-		SHOW_NO_VALUE?: string;
-		SIZE?: number;
-		ROWS?: number;
-		REGEXP?: string;
-		MIN_LENGTH?: number;
-		MAX_LENGTH?: number;
-		DEFAULT_VALUE?: string | null;
-	};
-	[key: string]: unknown;
-}
-
-interface IEnumValue {
-	name: string;
-	value: string;
-}
+// Импорт типов и сущностей
+import { IBitrix24Field, processFormFields, getAllItems, CommunicationType, BitrixResourceType } from './types';
+import { Lead } from './Lead';
+import { Deal } from './Deal';
+import { Contact } from './Contact';
+import { Company } from './Company';
+// Импорт модуля переводов
+import { applyTranslations, detectLanguage, getTranslation } from './translations';
 
 export class Bitrix24 implements INodeType {
-	private static formatCommunicationField(value: string, type: string): { VALUE: string; TYPE: string }[] {
-		return [{ VALUE: value, TYPE: type }];
-	}
-
-	private static processFormFields(fieldsCollection: Array<{ fieldName: string; fieldValue: string; field?: IBitrix24Field }>): IDataObject {
-		const fields: IDataObject = {};
-		
-		for (const field of fieldsCollection) {
-			if (field.fieldName === 'PHONE') {
-				fields[field.fieldName] = Bitrix24.formatCommunicationField(field.fieldValue, 'WORK');
-			} else if (field.fieldName === 'EMAIL') {
-				fields[field.fieldName] = Bitrix24.formatCommunicationField(field.fieldValue, 'WORK');
-			} else if (field.field?.type === 'enumeration' && field.field.items && Array.isArray(field.field.items)) {
-				// Для полей типа enumeration передаем ID выбранного значения
-				const selectedOption = field.field.items.find(item => item.VALUE === field.fieldValue);
-				if (selectedOption) {
-					fields[field.fieldName] = selectedOption.ID;
-				}
-			} else {
-				fields[field.fieldName] = field.fieldValue;
-			}
-		}
-		
-		return fields;
-	}
-
-	private static async getAllItems(
-		endpoint: string,
-		params: IDataObject,
-		maxBatchSize: number = 50
-	): Promise<IDataObject[]> {
-		const allItems: IDataObject[] = [];
-		let start = 0;
-		let hasMore = true;
-
-		while (hasMore) {
-			const batchParams = {
-				...params,
-				start,
-			};
-
-			const response = await axios.post(endpoint, batchParams);
-			const items = response.data.result;
-
-			if (!Array.isArray(items) || items.length === 0) {
-				hasMore = false;
-				break;
-			}
-
-			allItems.push(...items);
-
-			if (items.length < maxBatchSize) {
-				hasMore = false;
-			} else {
-				start += maxBatchSize;
-				// Добавляем задержку между запросами для соблюдения ограничений API
-				await new Promise(resolve => setTimeout(resolve, 1000));
-			}
-		}
-
-		return allItems;
-	}
-
-	description: INodeTypeDescription = {
+	description: INodeTypeDescription = applyTranslations({
 		displayName: 'Bitrix24',
 		name: 'bitrix24',
 		icon: 'file:bitrix24.svg',
@@ -139,28 +47,16 @@ export class Bitrix24 implements INodeType {
 				type: 'options',
 				noDataExpression: true,
 				options: [
-					{
-						name: 'Lead',
-						value: 'lead',
-					},
-					{
-						name: 'Deal',
-						value: 'deal',
-					},
-					{
-						name: 'Contact',
-						value: 'contact',
-					},
-					{
-						name: 'Company',
-						value: 'company',
-					},
+					Lead.getDescription(),
+					Deal.getDescription(),
+					Contact.getDescription(),
+					Company.getDescription(),
 				],
 				default: 'lead',
 				required: true,
 			},
 			{
-				displayName: 'Operation',
+				displayName: getTranslation('operation'),
 				name: 'operation',
 				type: 'options',
 				noDataExpression: true,
@@ -168,31 +64,31 @@ export class Bitrix24 implements INodeType {
 					{
 						name: 'Create',
 						value: 'create',
-						description: 'Create a record',
+						description: getTranslation('operation.create'),
 						action: 'Create a record',
 					},
 					{
 						name: 'Get',
 						value: 'get',
-						description: 'Get a record',
+						description: getTranslation('operation.get'),
 						action: 'Get a record',
 					},
 					{
 						name: 'List',
 						value: 'list',
-						description: 'Get list of records',
+						description: getTranslation('operation.list'),
 						action: 'Get list of records',
 					},
 					{
 						name: 'Update',
 						value: 'update',
-						description: 'Update a record',
+						description: getTranslation('operation.update'),
 						action: 'Update a record',
 					},
 					{
 						name: 'Delete',
 						value: 'delete',
-						description: 'Delete a record',
+						description: getTranslation('operation.delete'),
 						action: 'Delete a record',
 					},
 				],
@@ -201,19 +97,19 @@ export class Bitrix24 implements INodeType {
 			},
 			// ID поле
 			{
-				displayName: 'Get By',
+				displayName: getTranslation('getByOptions.getBy'),
 				name: 'getBy',
 				type: 'options',
 				options: [
 					{
 						name: 'ID',
 						value: 'id',
-						description: 'Получить по ID',
+						description: getTranslation('getByOptions.getById'),
 					},
 					{
 						name: 'Filter',
 						value: 'filter',
-						description: 'Получить по фильтру',
+						description: getTranslation('getByOptions.getByFilter'),
 					},
 				],
 				default: 'id',
@@ -235,70 +131,70 @@ export class Bitrix24 implements INodeType {
 						getBy: ['id'],
 					},
 				},
-				description: 'ID записи',
+				description: getTranslation('fields.idDescription'),
 			},
 			{
-				displayName: 'Filter Fields',
+				displayName: getTranslation('fields.filterFields'),
 				name: 'filterFields',
 				type: 'fixedCollection',
 				typeOptions: {
 					multipleValues: true,
 					sortable: true,
 				},
-					placeholder: 'Add Filter Field',
-					default: {},
-					options: [
-						{
-							name: 'field',
-							displayName: 'Field',
-							values: [
-								{
-									displayName: 'Field Name',
-									name: 'fieldName',
-									type: 'options',
-									typeOptions: {
-										loadOptionsMethod: 'getFields',
-									},
-									default: '',
-									description: 'Имя поля для фильтрации',
+				placeholder: getTranslation('fields.filterFieldsPlaceholder'),
+				default: {},
+				options: [
+					{
+						name: 'field',
+						displayName: getTranslation('fields.fields'),
+						values: [
+							{
+								displayName: getTranslation('fields.fieldName'),
+								name: 'fieldName',
+								type: 'options',
+								typeOptions: {
+									loadOptionsMethod: 'getFields',
 								},
-								{
-									displayName: 'Operation',
-									name: 'operation',
-									type: 'options',
-									options: [
-										{ name: 'Equals', value: 'equals' },
-										{ name: 'Not Equals', value: '!=' },
-										{ name: 'Greater Than', value: '>' },
-										{ name: 'Greater Than or Equal', value: '>=' },
-										{ name: 'Less Than', value: '<' },
-										{ name: 'Less Than or Equal', value: '<=' },
-										{ name: 'Contains', value: '%' },
-										{ name: 'Not Contains', value: '!%' },
-										{ name: 'Starts With', value: '=%' },
-										{ name: 'Ends With', value: '%=' },
-										{ name: 'In List', value: '@' },
-										{ name: 'Not In List', value: '!@' },
-									],
-									default: 'equals',
-									description: 'Операция сравнения',
-								},
-								{
-									displayName: 'Value',
-									name: 'value',
-									type: 'string',
-									default: '',
-									description: 'Значение для фильтрации',
-								},
-							],
-						},
-					],
-					displayOptions: {
-						show: {
-							operation: ['get'],
-							getBy: ['filter'],
-						},
+								default: '',
+								description: getTranslation('fields.filterFieldNameDescription'),
+							},
+							{
+								displayName: getTranslation('fields.filterOperation'),
+								name: 'operation',
+								type: 'options',
+								options: [
+									{ name: getTranslation('filterOperations.equals'), value: 'equals' },
+									{ name: getTranslation('filterOperations.notEquals'), value: '!=' },
+									{ name: getTranslation('filterOperations.greaterThan'), value: '>' },
+									{ name: getTranslation('filterOperations.greaterThanOrEqual'), value: '>=' },
+									{ name: getTranslation('filterOperations.lessThan'), value: '<' },
+									{ name: getTranslation('filterOperations.lessThanOrEqual'), value: '<=' },
+									{ name: getTranslation('filterOperations.contains'), value: '%' },
+									{ name: getTranslation('filterOperations.notContains'), value: '!%' },
+									{ name: getTranslation('filterOperations.startsWith'), value: '=%' },
+									{ name: getTranslation('filterOperations.endsWith'), value: '%=' },
+									{ name: getTranslation('filterOperations.inList'), value: '@' },
+									{ name: getTranslation('filterOperations.notInList'), value: '!@' },
+								],
+								default: 'equals',
+								description: getTranslation('filterOperations.operationDescription'),
+							},
+							{
+								displayName: getTranslation('fields.filterValue'),
+								name: 'value',
+								type: 'string',
+								default: '',
+								description: getTranslation('fields.filterValueDescription'),
+							},
+						],
 					},
+				],
+				displayOptions: {
+					show: {
+						operation: ['get'],
+						getBy: ['filter'],
+					},
+				},
 			},
 			{
 				displayName: 'ID',
@@ -311,23 +207,23 @@ export class Bitrix24 implements INodeType {
 						operation: ['update', 'delete'],
 					},
 				},
-				description: 'ID записи',
+				description: getTranslation('fields.idDescription'),
 			},
 			// Выбор формата ввода полей
 			{
-				displayName: 'Input Format',
+				displayName: getTranslation('fields.inputFormat'),
 				name: 'inputFormat',
-				type: 'options',
+				type: 'options',	
 				options: [
 					{
-						name: 'Form',
+						name: getTranslation('inputFormat.form'),
 						value: 'form',
-						description: 'Использовать форму для ввода полей',
+						description: getTranslation('inputFormat.formDescription'),
 					},
 					{
-						name: 'JSON',
+						name: getTranslation('inputFormat.json'),
 						value: 'json',
-						description: 'Использовать JSON формат для ввода полей',
+						description: getTranslation('inputFormat.jsonDescription'),
 					},
 				],
 				default: 'form',
@@ -339,11 +235,11 @@ export class Bitrix24 implements INodeType {
 			},
 			// JSON поля
 			{
-				displayName: 'Fields (JSON)',
+				displayName: getTranslation('fields.fieldsJson'),
 				name: 'fieldsJson',
 				type: 'json',
 				default: '{}',
-				description: 'Поля в формате JSON',
+				description: getTranslation('fields.fieldsJsonDescription'),
 				displayOptions: {
 					show: {
 						operation: ['create', 'update'],
@@ -353,32 +249,46 @@ export class Bitrix24 implements INodeType {
 			},
 			// Поля для создания и обновления
 			{
-				displayName: 'Fields',
+				displayName: getTranslation('fields.fields'),
 				name: 'fields',
 				type: 'fixedCollection',
 				typeOptions: {
 					multipleValues: true,
 					sortable: true,
 				},
-				placeholder: 'Add Field',
+				placeholder: getTranslation('fields.fieldsPlaceholder'),
 				default: {},
 				options: [
 					{
 						name: 'field',
-						displayName: 'Field',
+						displayName: getTranslation('fields.fields'),
 						values: [
 							{
-								displayName: 'Field Name',
+								displayName: getTranslation('fields.fieldName'),
 								name: 'fieldName',
 								type: 'options',
 								typeOptions: {
 									loadOptionsMethod: 'getFields',
 								},
 								default: '',
-								description: 'Имя поля для обновления',
+								description: getTranslation('fields.fieldNameDescription'),
 							},
 							{
-								displayName: 'Field Value',
+								displayName: getTranslation('fields.fieldValueType'),
+								name: 'fieldValueType',
+								type: 'options',
+								options: Contact.communicationTypes,
+								default: CommunicationType.WORK,
+								description: getTranslation('fields.fieldValueTypeDescription'),
+								displayOptions: {
+									show: {
+										'/resource': ['contact'],
+										'fieldName': ['PHONE', 'EMAIL', 'PHONE_MOBILE', 'PHONE_WORK', 'PHONE_HOME', 'EMAIL_HOME', 'EMAIL_WORK'],
+									},
+								},
+							},
+							{
+								displayName: getTranslation('fields.fieldValue'),
 								name: 'fieldValue',
 								type: 'options',
 								typeOptions: {
@@ -388,28 +298,28 @@ export class Bitrix24 implements INodeType {
 								displayOptions: {
 									show: {
 										'/operation': ['create', 'update'],
-										'fieldName': ['UF_CRM_1736516348'], // Здесь нужно динамически добавлять все поля типа enumeration
+										fieldValueType: ['enumeration'],
 									},
 								},
 								default: '',
-								description: 'Значение поля',
+								description: getTranslation('fields.fieldValueDescription'),
 							},
 							{
-								displayName: 'Field Value',
+								displayName: getTranslation('fields.fieldValue'),
 								name: 'fieldValue',
 								type: 'string',
 								displayOptions: {
 									hide: {
-										'fieldName': ['UF_CRM_1736516348'], // Здесь нужно динамически добавлять все поля типа enumeration
+										fieldValueType: ['enumeration'],
 									},
 								},
 								default: '',
-								description: 'Значение поля',
+								description: getTranslation('fields.fieldValueDescription'),
 							},
 						],
 					},
 				],
-				description: 'Поля для создания/обновления',
+				description: getTranslation('fields.fieldsDescription'),
 				displayOptions: {
 					show: {
 						operation: ['create', 'update'],
@@ -419,11 +329,11 @@ export class Bitrix24 implements INodeType {
 			},
 			// Поля для получения списка записей
 			{
-				displayName: 'Return All',
+				displayName: getTranslation('fields.returnAll'),
 				name: 'returnAll',
 				type: 'boolean',
 				default: false,
-				description: 'Получить все записи',
+				description: getTranslation('fields.returnAllDescription'),
 				displayOptions: {
 					show: {
 						operation: ['list'],
@@ -431,11 +341,11 @@ export class Bitrix24 implements INodeType {
 				},
 			},
 			{
-				displayName: 'Limit',
+				displayName: getTranslation('fields.limit'),
 				name: 'limit',
 				type: 'number',
 				default: 50,
-				description: 'Максимальное количество записей',
+				description: getTranslation('fields.limitDescription'),
 				displayOptions: {
 					show: {
 						operation: ['list'],
@@ -444,11 +354,11 @@ export class Bitrix24 implements INodeType {
 				},
 			},
 			{
-				displayName: 'Use Filter',
+				displayName: getTranslation('fields.useFilter'),
 				name: 'useFilter',
 				type: 'boolean',
 				default: false,
-				description: 'Использовать фильтрацию записей',
+				description: getTranslation('fields.useFilterDescription'),
 				displayOptions: {
 					show: {
 						operation: ['list'],
@@ -456,57 +366,57 @@ export class Bitrix24 implements INodeType {
 				},
 			},
 			{
-				displayName: 'Filter Fields',
+				displayName: getTranslation('fields.filterFields'),
 				name: 'filterFields',
 				type: 'fixedCollection',
 				typeOptions: {
 					multipleValues: true,
 					sortable: true,
 				},
-				placeholder: 'Add Filter Field',
+				placeholder: getTranslation('fields.filterFieldsPlaceholder'),
 				default: {},
 				options: [
 					{
 						name: 'field',
-						displayName: 'Field',
+						displayName: getTranslation('fields.fields'),
 						values: [
 							{
-								displayName: 'Field Name',
+								displayName: getTranslation('fields.fieldName'),
 								name: 'fieldName',
 								type: 'options',
 								typeOptions: {
 									loadOptionsMethod: 'getFields',
 								},
 								default: '',
-								description: 'Имя поля для фильтрации',
+								description: getTranslation('fields.filterFieldNameDescription'),
 							},
 							{
-								displayName: 'Operation',
+								displayName: getTranslation('fields.filterOperation'),
 								name: 'operation',
 								type: 'options',
 								options: [
-									{ name: 'Equals', value: 'equals' },
-									{ name: 'Not Equals', value: '!=' },
-									{ name: 'Greater Than', value: '>' },
-									{ name: 'Greater Than or Equal', value: '>=' },
-									{ name: 'Less Than', value: '<' },
-									{ name: 'Less Than or Equal', value: '<=' },
-									{ name: 'Contains', value: '%' },
-									{ name: 'Not Contains', value: '!%' },
-									{ name: 'Starts With', value: '=%' },
-									{ name: 'Ends With', value: '%=' },
-									{ name: 'In List', value: '@' },
-									{ name: 'Not In List', value: '!@' },
+									{ name: getTranslation('filterOperations.equals'), value: 'equals' },
+									{ name: getTranslation('filterOperations.notEquals'), value: '!=' },
+									{ name: getTranslation('filterOperations.greaterThan'), value: '>' },
+									{ name: getTranslation('filterOperations.greaterThanOrEqual'), value: '>=' },
+									{ name: getTranslation('filterOperations.lessThan'), value: '<' },
+									{ name: getTranslation('filterOperations.lessThanOrEqual'), value: '<=' },
+									{ name: getTranslation('filterOperations.contains'), value: '%' },
+									{ name: getTranslation('filterOperations.notContains'), value: '!%' },
+									{ name: getTranslation('filterOperations.startsWith'), value: '=%' },
+									{ name: getTranslation('filterOperations.endsWith'), value: '%=' },
+									{ name: getTranslation('filterOperations.inList'), value: '@' },
+									{ name: getTranslation('filterOperations.notInList'), value: '!@' },
 								],
 								default: 'equals',
-								description: 'Операция сравнения',
+								description: getTranslation('filterOperations.operationDescription'),
 							},
 							{
-								displayName: 'Value',
+								displayName: getTranslation('fields.filterValue'),
 								name: 'value',
 								type: 'string',
 								default: '',
-								description: 'Значение для фильтрации',
+								description: getTranslation('fields.filterValueDescription'),
 							},
 						],
 					},
@@ -520,14 +430,14 @@ export class Bitrix24 implements INodeType {
 			},
 			// Выбор полей для получения
 			{
-				displayName: 'Select Fields',
+				displayName: getTranslation('fields.selectFields'),
 				name: 'selectFields',
 				type: 'multiOptions',
 				typeOptions: {
 					loadOptionsMethod: 'getFields',
 				},
 				default: [],
-				description: 'Выберите поля для получения',
+				description: getTranslation('fields.selectFieldsDescription'),
 				displayOptions: {
 					show: {
 						operation: ['get', 'list'],
@@ -535,7 +445,7 @@ export class Bitrix24 implements INodeType {
 				},
 			},
 		],
-	};
+	}, detectLanguage());
 
 	methods = {
 		loadOptions: {
@@ -562,6 +472,17 @@ export class Bitrix24 implements INodeType {
 
 					const fields = response.data.result as Record<string, IBitrix24Field>;
 					const options: INodePropertyOptions[] = [];
+					
+					// Логируем поля телефона и email для диагностики
+					console.log('Поля сущности:', resource);
+					
+					console.log('Язык:', process.env.N8N_DEFAULT_LANGUAGE);
+					// console.log('Поля:', fields);
+					Object.keys(fields).forEach(key => {
+						if (key.includes('PHONE') || key.includes('EMAIL')) {
+							console.log(`Поле: ${key}, Тип: ${fields[key].type}`);
+						}
+					});
 					
 					for (const [key, value] of Object.entries(fields)) {
 						const fieldName = value.formLabel || value.listLabel || value.title || key;
@@ -599,10 +520,6 @@ export class Bitrix24 implements INodeType {
 					const fieldsData = this.getCurrentNodeParameter('fields') as { field: Array<{ fieldName: string; fieldValue: string }> };
 					const fieldName = fieldsData?.field?.[0]?.fieldName;
 					const webhookUrl = credentials.webhookUrl as string;
-					
-					// console.log('Fields:', fieldsData);
-					// console.log('Field Name:', fieldName);
-					// console.log('Resource:', resource);
 
 					if (!webhookUrl) {
 						throw new NodeOperationError(this.getNode(), 'Webhook URL is required!');
@@ -639,12 +556,17 @@ export class Bitrix24 implements INodeType {
 						];
 					}
 
-					if (field.type === 'enumeration' && field.items && Array.isArray(field.items)) {
-						return field.items.map((item: { ID: string; VALUE: string }) => ({
-							name: item.VALUE,
-							value: item.VALUE,
-							description: `ID: ${item.ID}`,
-						}));
+					// Устанавливаем тип поля для текущего элемента в коллекции
+					if (field.type === 'enumeration') {
+						// Проверяем, что это поле типа перечисление
+						// Возвращаем список значений для выбора
+						if (field.items && Array.isArray(field.items)) {
+							return field.items.map((item: { ID: string; VALUE: string }) => ({
+								name: item.VALUE,
+								value: item.VALUE,
+								description: `ID: ${item.ID}`,
+							}));
+						}
 					}
 
 					return [
@@ -676,6 +598,16 @@ export class Bitrix24 implements INodeType {
 			if (!webhookUrl) {
 				throw new NodeOperationError(this.getNode(), 'Webhook URL is required!');
 			}
+			
+			// Установка языка из учетных данных
+			if (credentials.language) {
+				process.env.N8N_DEFAULT_LANGUAGE = credentials.language as string;
+				console.log(`Установлен язык из учетных данных: ${credentials.language}`);
+			} else {
+				// По умолчанию устанавливаем русский
+				process.env.N8N_DEFAULT_LANGUAGE = 'ru';
+				console.log('Установлен язык по умолчанию: ru');
+			}
 
 			const items = this.getInputData();
 			const returnData: IDataObject[] = [];
@@ -698,18 +630,43 @@ export class Bitrix24 implements INodeType {
 							const fieldsResponse = await axios.get(fieldsEndpoint);
 							const fieldsInfo = fieldsResponse.data.result as Record<string, IBitrix24Field>;
 
+							// Получаем коллекцию полей
 							const fieldsCollection = this.getNodeParameter('fields.field', i, []) as Array<{
 								fieldName: string;
 								fieldValue: string;
+								fieldValueType?: string;
 							}>;
 
-							// Добавляем информацию о поле к каждому элементу коллекции
-							const enrichedFieldsCollection = fieldsCollection.map(field => ({
-								...field,
-								field: fieldsInfo[field.fieldName],
-							}));
+							// Добавляем информацию о поле и ресурсе к каждому элементу коллекции
+							const enrichedFieldsCollection = fieldsCollection.map(field => {
+								const fieldInfo = fieldsInfo[field.fieldName];
+								// Определяем тип поля на основе данных из API
+								let updatedFieldValueType = field.fieldValueType;
+								
+								// Если поле типа enumeration, устанавливаем соответствующий тип
+								if (fieldInfo && fieldInfo.type === 'enumeration') {
+									updatedFieldValueType = 'enumeration';
+								}
+								
+								return {
+									...field,
+									fieldValueType: updatedFieldValueType,
+									resource: resource as BitrixResourceType,
+									field: fieldInfo,
+								};
+							});
 
-							fields = Bitrix24.processFormFields(enrichedFieldsCollection);
+							// Логируем поля для контакта и телефона/email
+							if (resource === 'contact') {
+								const phoneEmailFields = enrichedFieldsCollection.filter(
+									field => field.fieldName.includes('PHONE') || field.fieldName.includes('EMAIL')
+								);
+								if (phoneEmailFields.length > 0) {
+									console.log('Поля связи для контакта:', phoneEmailFields);
+								}
+							}
+
+							fields = processFormFields(enrichedFieldsCollection);
 						}
 						
 						const params: IDataObject = { fields };
@@ -729,6 +686,22 @@ export class Bitrix24 implements INodeType {
 						const params: IDataObject = {};
 						if (selectFields.length > 0) {
 							params.select = selectFields;
+						} else {
+							// Использовать стандартные поля для сущности, если не выбраны конкретные поля
+							switch(resource) {
+								case Lead.resource:
+									params.select = Lead.getDefaultFields();
+									break;
+								case Deal.resource:
+									params.select = Deal.getDefaultFields();
+									break;
+								case Contact.resource:
+									params.select = Contact.getDefaultFields();
+									break;
+								case Company.resource:
+									params.select = Company.getDefaultFields();
+									break;
+							}
 						}
 
 						if (getBy === 'id') {
@@ -781,6 +754,22 @@ export class Bitrix24 implements INodeType {
 						const params: IDataObject = {};
 						if (selectFields.length > 0) {
 							params.select = selectFields;
+						} else {
+							// Использовать стандартные поля для сущности, если не выбраны конкретные поля
+							switch(resource) {
+								case Lead.resource:
+									params.select = Lead.getDefaultFields();
+									break;
+								case Deal.resource:
+									params.select = Deal.getDefaultFields();
+									break;
+								case Contact.resource:
+									params.select = Contact.getDefaultFields();
+									break;
+								case Company.resource:
+									params.select = Company.getDefaultFields();
+									break;
+							}
 						}
 
 						// Добавляем обработку фильтров
@@ -822,7 +811,7 @@ export class Bitrix24 implements INodeType {
 							returnData.push(...response.data.result);
 						} else {
 							// Получаем все записи с пагинацией
-							const allItems = await Bitrix24.getAllItems(endpoint, params);
+							const allItems = await getAllItems(endpoint, params);
 							returnData.push(...allItems);
 						}
 					}

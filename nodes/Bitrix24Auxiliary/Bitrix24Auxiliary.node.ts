@@ -372,6 +372,16 @@ export class Bitrix24Auxiliary implements INodeType {
 			if (!webhookUrl) {
 				throw new NodeOperationError(this.getNode(), 'Webhook URL is required!');
 			}
+			
+			// Установка языка из учетных данных
+			if (credentials.language) {
+				process.env.N8N_DEFAULT_LANGUAGE = credentials.language as string;
+				console.log(`Установлен язык из учетных данных: ${credentials.language}`);
+			} else {
+				// По умолчанию устанавливаем русский
+				process.env.N8N_DEFAULT_LANGUAGE = 'ru';
+				console.log('Установлен язык по умолчанию: ru');
+			}
 
 			for (let i = 0; i < items.length; i++) {
 				try {
