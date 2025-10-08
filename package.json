@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-bitrix24",
-  "version": "0.11.8.1",
+  "version": "0.11.9",
   "description": "n8n node для работы с Bitrix24 API",
   "keywords": [
     "n8n-community-node-package",
