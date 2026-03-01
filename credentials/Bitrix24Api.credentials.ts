@@ -12,9 +12,7 @@ export class Bitrix24Api implements ICredentialType {
 	documentationUrl = 'https://dev.1c-bitrix.ru/rest_help/';
 	
 	constructor() {
-		// Устанавливаем русский язык по умолчанию при создании экземпляра учетных данных
-		process.env.N8N_DEFAULT_LANGUAGE = 'ru';
-		console.log('Установлен язык по умолчанию (конструктор): ru');
+		// No-op: language is determined per-execution, not globally
 	}
 	
 	properties: INodeProperties[] = [
@@ -46,12 +44,6 @@ export class Bitrix24Api implements ICredentialType {
 	
 	];
 
-	// Метод для установки языка
-	setLanguage(language: string) {
-		process.env.N8N_DEFAULT_LANGUAGE = language;
-		console.log(`Установлен язык: ${language}`);
-	}
-
 	authenticate: IAuthenticateGeneric = {
 		type: 'generic',
 		properties: {
@@ -63,14 +55,6 @@ export class Bitrix24Api implements ICredentialType {
 
 	// Метод применяется перед проверкой учетных данных
 	async preAuthentication(credentials: IDataObject) {
-		// Установка языка из учетных данных
-		if (credentials.language) {
-			this.setLanguage(credentials.language as string);
-		} else {
-			// По умолчанию устанавливаем русский
-			this.setLanguage('ru');
-		}
-		
 		return {};
 	}
 

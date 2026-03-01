@@ -4,11 +4,14 @@ import {
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
-	INodePropertyOptions,
-	ILoadOptionsFunctions,
 } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import axios, { AxiosError } from 'axios';
+
+// Импорт общих утилит
+import { bitrix24ApiRequest } from '../shared/GenericFunctions';
+import { detectLanguage, getTranslation } from '../Bitrix24/translations';
+
+const lang = detectLanguage();
 
 export class Bitrix24UserField implements INodeType {
 	description: INodeTypeDescription = {
@@ -18,7 +21,7 @@ export class Bitrix24UserField implements INodeType {
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
-		description: 'Работа с пользовательскими полями в Bitrix24',
+		description: getTranslation('userField.description', lang),
 		defaults: {
 			name: 'Bitrix24 User Field',
 		},
@@ -66,32 +69,32 @@ export class Bitrix24UserField implements INodeType {
 					{
 						name: 'Create',
 						value: 'create',
-						description: 'Создать пользовательское поле',
-						action: 'Create a user field',
+						description: getTranslation('userField.operations.create.description', lang),
+						action: getTranslation('userField.operations.create.action', lang),
 					},
 					{
 						name: 'Update',
 						value: 'update',
-						description: 'Обновить пользовательское поле',
-						action: 'Update a user field',
+						description: getTranslation('userField.operations.update.description', lang),
+						action: getTranslation('userField.operations.update.action', lang),
 					},
 					{
 						name: 'Get',
 						value: 'get',
-						description: 'Получить пользовательское поле',
-						action: 'Get a user field',
+						description: getTranslation('userField.operations.get.description', lang),
+						action: getTranslation('userField.operations.get.action', lang),
 					},
 					{
 						name: 'Get All',
 						value: 'getAll',
-						description: 'Получить все пользовательские поля',
-						action: 'Get all user fields',
+						description: getTranslation('userField.operations.getAll.description', lang),
+						action: getTranslation('userField.operations.getAll.action', lang),
 					},
 					{
 						name: 'Delete',
 						value: 'delete',
-						description: 'Удалить пользовательское поле',
-						action: 'Delete a user field',
+						description: getTranslation('userField.operations.delete.description', lang),
+						action: getTranslation('userField.operations.delete.action', lang),
 					},
 				],
 				default: 'create',
@@ -108,7 +111,7 @@ export class Bitrix24UserField implements INodeType {
 						operation: ['update', 'get', 'delete'],
 					},
 				},
-				description: 'ID пользовательского поля',
+				description: getTranslation('userField.fields.fieldIdDescription', lang),
 			},
 			// Поля для создания и обновления
 			{
@@ -122,7 +125,7 @@ export class Bitrix24UserField implements INodeType {
 						operation: ['create'],
 					},
 				},
-				description: 'Название поля (например: UF_CRM_CUSTOM_FIELD)',
+				description: getTranslation('userField.fields.fieldNameDescription', lang),
 			},
 			{
 				displayName: 'Field Label',
@@ -135,7 +138,7 @@ export class Bitrix24UserField implements INodeType {
 						operation: ['create', 'update'],
 					},
 				},
-				description: 'Отображаемое название поля',
+				description: getTranslation('userField.fields.fieldLabelDescription', lang),
 			},
 			{
 				displayName: 'Field Type',
@@ -143,43 +146,43 @@ export class Bitrix24UserField implements INodeType {
 				type: 'options',
 				options: [
 					{
-						name: 'Строка',
+						name: getTranslation('userField.fieldTypes.string', lang),
 						value: 'string',
 					},
 					{
-						name: 'Целое число',
+						name: getTranslation('userField.fieldTypes.integer', lang),
 						value: 'integer',
 					},
 					{
-						name: 'Дробное число',
+						name: getTranslation('userField.fieldTypes.double', lang),
 						value: 'double',
 					},
 					{
-						name: 'Да/Нет',
+						name: getTranslation('userField.fieldTypes.boolean', lang),
 						value: 'boolean',
 					},
 					{
-						name: 'Список',
+						name: getTranslation('userField.fieldTypes.enumeration', lang),
 						value: 'enumeration',
 					},
 					{
-						name: 'Дата',
+						name: getTranslation('userField.fieldTypes.date', lang),
 						value: 'date',
 					},
 					{
-						name: 'Дата и время',
+						name: getTranslation('userField.fieldTypes.datetime', lang),
 						value: 'datetime',
 					},
 					{
-						name: 'Файл',
+						name: getTranslation('userField.fieldTypes.file', lang),
 						value: 'file',
 					},
 					{
-						name: 'Деньги',
+						name: getTranslation('userField.fieldTypes.money', lang),
 						value: 'money',
 					},
 					{
-						name: 'URL',
+						name: getTranslation('userField.fieldTypes.url', lang),
 						value: 'url',
 					},
 				],
@@ -190,7 +193,7 @@ export class Bitrix24UserField implements INodeType {
 						operation: ['create'],
 					},
 				},
-				description: 'Тип пользовательского поля',
+				description: getTranslation('userField.fields.fieldTypeDescription', lang),
 			},
 			// Значения для списка
 			{
@@ -207,7 +210,7 @@ export class Bitrix24UserField implements INodeType {
 						userTypeId: ['enumeration'],
 					},
 				},
-				description: 'Значения для списка',
+				description: getTranslation('userField.fields.listValuesDescription', lang),
 				default: {},
 				options: [
 					{
@@ -219,7 +222,7 @@ export class Bitrix24UserField implements INodeType {
 								name: 'value',
 								type: 'string',
 								default: '',
-								description: 'Значение элемента списка',
+								description: getTranslation('userField.fields.valueDescription', lang),
 							},
 						],
 					},
@@ -236,7 +239,7 @@ export class Bitrix24UserField implements INodeType {
 						operation: ['create', 'update'],
 					},
 				},
-				description: 'Множественное поле',
+				description: getTranslation('userField.fields.multipleDescription', lang),
 			},
 			{
 				displayName: 'Mandatory',
@@ -248,7 +251,7 @@ export class Bitrix24UserField implements INodeType {
 						operation: ['create', 'update'],
 					},
 				},
-				description: 'Обязательное поле',
+				description: getTranslation('userField.fields.mandatoryDescription', lang),
 			},
 			{
 				displayName: 'Show Filter',
@@ -260,7 +263,7 @@ export class Bitrix24UserField implements INodeType {
 						operation: ['create', 'update'],
 					},
 				},
-				description: 'Показывать в фильтре',
+				description: getTranslation('userField.fields.showFilterDescription', lang),
 			},
 			{
 				displayName: 'Show In List',
@@ -272,7 +275,7 @@ export class Bitrix24UserField implements INodeType {
 						operation: ['create', 'update'],
 					},
 				},
-				description: 'Показывать в списке',
+				description: getTranslation('userField.fields.showInListDescription', lang),
 			},
 		],
 	};
@@ -284,26 +287,6 @@ export class Bitrix24UserField implements INodeType {
 		const operation = this.getNodeParameter('operation', 0) as string;
 
 		try {
-			const credentials = await this.getCredentials('bitrix24Api');
-			if (!credentials) {
-				throw new NodeOperationError(this.getNode(), 'No credentials got returned!');
-			}
-
-			const webhookUrl = credentials.webhookUrl as string;
-			if (!webhookUrl) {
-				throw new NodeOperationError(this.getNode(), 'Webhook URL is required!');
-			}
-			
-			// Установка языка из учетных данных
-			if (credentials.language) {
-				process.env.N8N_DEFAULT_LANGUAGE = credentials.language as string;
-				console.log(`Установлен язык из учетных данных: ${credentials.language}`);
-			} else {
-				// По умолчанию устанавливаем русский
-				process.env.N8N_DEFAULT_LANGUAGE = 'ru';
-				console.log('Установлен язык по умолчанию: ru');
-			}
-
 			for (let i = 0; i < items.length; i++) {
 				try {
 					if (operation === 'create') {
@@ -346,9 +329,8 @@ export class Bitrix24UserField implements INodeType {
 							}
 						}
 
-						const endpoint = `${webhookUrl}crm.${resource}.userfield.add`;
-						const response = await axios.post(endpoint, params);
-						returnData.push(response.data);
+						const response = await bitrix24ApiRequest.call(this, 'POST', `crm.${resource}.userfield.add`, params);
+						returnData.push(response);
 					}
 
 					if (operation === 'update') {
@@ -389,33 +371,29 @@ export class Bitrix24UserField implements INodeType {
 							}
 						}
 
-						const endpoint = `${webhookUrl}crm.${resource}.userfield.update`;
-						const response = await axios.post(endpoint, params);
-						returnData.push(response.data);
+						const response = await bitrix24ApiRequest.call(this, 'POST', `crm.${resource}.userfield.update`, params);
+						returnData.push(response);
 					}
 
 					if (operation === 'get') {
 						const fieldId = this.getNodeParameter('fieldId', i) as string;
-						const endpoint = `${webhookUrl}crm.${resource}.userfield.get`;
-						const response = await axios.post(endpoint, { id: fieldId });
-						returnData.push(response.data);
+						const response = await bitrix24ApiRequest.call(this, 'POST', `crm.${resource}.userfield.get`, { id: fieldId });
+						returnData.push(response);
 					}
 
 					if (operation === 'getAll') {
-						const endpoint = `${webhookUrl}crm.${resource}.userfield.list`;
-						const response = await axios.post(endpoint);
-						returnData.push(...response.data.result);
+						const response = await bitrix24ApiRequest.call(this, 'POST', `crm.${resource}.userfield.list`);
+						returnData.push(...response.result);
 					}
 
 					if (operation === 'delete') {
 						const fieldId = this.getNodeParameter('fieldId', i) as string;
-						const endpoint = `${webhookUrl}crm.${resource}.userfield.delete`;
-						const response = await axios.post(endpoint, { id: fieldId });
-						returnData.push(response.data);
+						const response = await bitrix24ApiRequest.call(this, 'POST', `crm.${resource}.userfield.delete`, { id: fieldId });
+						returnData.push(response);
 					}
 				} catch (error) {
 					if (this.continueOnFail()) {
-						if (error instanceof AxiosError) {
+						if (error instanceof Error) {
 							returnData.push({ error: error.message });
 						} else {
 							returnData.push({ error: 'An unknown error occurred' });
@@ -428,11 +406,10 @@ export class Bitrix24UserField implements INodeType {
 
 			return [this.helpers.returnJsonArray(returnData)];
 		} catch (error) {
-			if (error instanceof AxiosError && error.response) {
-				const message = error.response.data.error_description || error.response.data.error;
-				throw new NodeOperationError(this.getNode(), `Bitrix24 API error: ${message}`);
+			if (error instanceof NodeOperationError) {
+				throw error;
 			}
-			throw error;
+			throw new NodeOperationError(this.getNode(), `Bitrix24 API error: ${(error as Error).message}`);
 		}
 	}
-} 
+}

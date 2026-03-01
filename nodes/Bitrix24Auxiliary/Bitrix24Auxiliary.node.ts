@@ -4,11 +4,14 @@ import {
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
-	INodePropertyOptions,
-	ILoadOptionsFunctions,
 } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import axios, { AxiosError } from 'axios';
+
+// Импорт общих утилит
+import { bitrix24ApiRequest } from '../shared/GenericFunctions';
+import { detectLanguage, getTranslation } from '../Bitrix24/translations';
+
+const lang = detectLanguage();
 
 export class Bitrix24Auxiliary implements INodeType {
 	description: INodeTypeDescription = {
@@ -18,7 +21,7 @@ export class Bitrix24Auxiliary implements INodeType {
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
-		description: 'Управление вспомогательными сущностями в Bitrix24',
+		description: getTranslation('auxiliary.description', lang),
 		defaults: {
 			name: 'Bitrix24 Auxiliary',
 		},
@@ -38,12 +41,16 @@ export class Bitrix24Auxiliary implements INodeType {
 				noDataExpression: true,
 				options: [
 					{
-						name: 'Воронка продаж',
+						name: getTranslation('auxiliary.resources.category', lang),
 						value: 'category',
 					},
 					{
-						name: 'Статус воронки',
+						name: getTranslation('auxiliary.resources.status', lang),
 						value: 'status',
+					},
+					{
+						name: getTranslation('smartProcess.resources.type', lang),
+						value: 'smartProcessType',
 					},
 				],
 				default: 'category',
@@ -58,32 +65,32 @@ export class Bitrix24Auxiliary implements INodeType {
 					{
 						name: 'Create',
 						value: 'create',
-						description: 'Создать элемент',
-						action: 'Create an item',
+						description: getTranslation('auxiliary.operations.create.description', lang),
+						action: getTranslation('auxiliary.operations.create.action', lang),
 					},
 					{
 						name: 'Update',
 						value: 'update',
-						description: 'Обновить элемент',
-						action: 'Update an item',
+						description: getTranslation('auxiliary.operations.update.description', lang),
+						action: getTranslation('auxiliary.operations.update.action', lang),
 					},
 					{
 						name: 'Get',
 						value: 'get',
-						description: 'Получить элемент',
-						action: 'Get an item',
+						description: getTranslation('auxiliary.operations.get.description', lang),
+						action: getTranslation('auxiliary.operations.get.action', lang),
 					},
 					{
 						name: 'Get All',
 						value: 'getAll',
-						description: 'Получить все элементы',
-						action: 'Get all items',
+						description: getTranslation('auxiliary.operations.getAll.description', lang),
+						action: getTranslation('auxiliary.operations.getAll.action', lang),
 					},
 					{
 						name: 'Delete',
 						value: 'delete',
-						description: 'Удалить элемент',
-						action: 'Delete an item',
+						description: getTranslation('auxiliary.operations.delete.description', lang),
+						action: getTranslation('auxiliary.operations.delete.action', lang),
 					},
 				],
 				default: 'create',
@@ -101,7 +108,7 @@ export class Bitrix24Auxiliary implements INodeType {
 						operation: ['update', 'get', 'delete'],
 					},
 				},
-				description: 'ID воронки продаж',
+				description: getTranslation('auxiliary.fields.idDescription', lang),
 			},
 			{
 				displayName: 'Name',
@@ -115,7 +122,7 @@ export class Bitrix24Auxiliary implements INodeType {
 						operation: ['create', 'update'],
 					},
 				},
-				description: 'Название воронки продаж',
+				description: getTranslation('auxiliary.fields.nameDescription', lang),
 			},
 			{
 				displayName: 'Sort',
@@ -128,7 +135,7 @@ export class Bitrix24Auxiliary implements INodeType {
 						operation: ['create', 'update'],
 					},
 				},
-				description: 'Сортировка воронки',
+				description: getTranslation('auxiliary.fields.sortDescription', lang),
 			},
 			{
 				displayName: 'Is Default',
@@ -141,7 +148,7 @@ export class Bitrix24Auxiliary implements INodeType {
 						operation: ['create', 'update'],
 					},
 				},
-				description: 'Воронка по умолчанию',
+				description: getTranslation('auxiliary.fields.isDefaultDescription', lang),
 			},
 			// Поля для статусов воронки
 			{
@@ -156,7 +163,7 @@ export class Bitrix24Auxiliary implements INodeType {
 						operation: ['create', 'update', 'delete', 'getAll'],
 					},
 				},
-				description: 'ID воронки продаж',
+				description: getTranslation('auxiliary.fields.categoryIdDescription', lang),
 			},
 			{
 				displayName: 'Status Name',
@@ -170,7 +177,7 @@ export class Bitrix24Auxiliary implements INodeType {
 						operation: ['create', 'update'],
 					},
 				},
-				description: 'Название статуса',
+				description: getTranslation('auxiliary.fields.statusNameDescription', lang),
 			},
 			{
 				displayName: 'Status Sort',
@@ -183,7 +190,7 @@ export class Bitrix24Auxiliary implements INodeType {
 						operation: ['create', 'update'],
 					},
 				},
-				description: 'Сортировка статуса',
+				description: getTranslation('auxiliary.fields.statusSortDescription', lang),
 			},
 			{
 				displayName: 'Status Color',
@@ -196,7 +203,7 @@ export class Bitrix24Auxiliary implements INodeType {
 						operation: ['create', 'update'],
 					},
 				},
-				description: 'Цвет статуса в формате HEX',
+				description: getTranslation('auxiliary.fields.statusColorDescription', lang),
 			},
 			{
 				displayName: 'Status Semantic',
@@ -204,15 +211,15 @@ export class Bitrix24Auxiliary implements INodeType {
 				type: 'options',
 				options: [
 					{
-						name: 'Процесс',
+						name: getTranslation('auxiliary.semantics.process', lang),
 						value: 'P',
 					},
 					{
-						name: 'Успех',
+						name: getTranslation('auxiliary.semantics.success', lang),
 						value: 'S',
 					},
 					{
-						name: 'Неудача',
+						name: getTranslation('auxiliary.semantics.failure', lang),
 						value: 'F',
 					},
 				],
@@ -223,7 +230,7 @@ export class Bitrix24Auxiliary implements INodeType {
 						operation: ['create', 'update'],
 					},
 				},
-				description: 'Семантика статуса (P - процесс, S - успех, F - неудача)',
+				description: getTranslation('auxiliary.fields.statusSemanticDescription', lang),
 			},
 			// Общие поля для массового создания
 			{
@@ -236,7 +243,7 @@ export class Bitrix24Auxiliary implements INodeType {
 						operation: ['create', 'update'],
 					},
 				},
-				description: 'Создать несколько элементов',
+				description: getTranslation('auxiliary.fields.multipleItemsDescription', lang),
 			},
 			{
 				displayName: 'Items',
@@ -253,7 +260,7 @@ export class Bitrix24Auxiliary implements INodeType {
 						resource: ['category'],
 					},
 				},
-				description: 'Список воронок для создания',
+				description: getTranslation('auxiliary.fields.itemsDescription', lang),
 				default: {},
 				options: [
 					{
@@ -265,21 +272,21 @@ export class Bitrix24Auxiliary implements INodeType {
 								name: 'name',
 								type: 'string',
 								default: '',
-								description: 'Название воронки',
+								description: getTranslation('auxiliary.fields.nameDescription', lang),
 							},
 							{
 								displayName: 'Sort',
 								name: 'sort',
 								type: 'number',
 								default: 100,
-								description: 'Сортировка',
+								description: getTranslation('auxiliary.fields.sortDescription', lang),
 							},
 							{
 								displayName: 'Is Default',
 								name: 'isDefault',
 								type: 'boolean',
 								default: false,
-								description: 'Воронка по умолчанию',
+								description: getTranslation('auxiliary.fields.isDefaultDescription', lang),
 							},
 						],
 					},
@@ -300,7 +307,7 @@ export class Bitrix24Auxiliary implements INodeType {
 						resource: ['status'],
 					},
 				},
-				description: 'Список статусов для создания',
+				description: getTranslation('auxiliary.fields.statusItemsDescription', lang),
 				default: {},
 				options: [
 					{
@@ -312,21 +319,21 @@ export class Bitrix24Auxiliary implements INodeType {
 								name: 'name',
 								type: 'string',
 								default: '',
-								description: 'Название статуса',
+								description: getTranslation('auxiliary.fields.statusNameDescription', lang),
 							},
 							{
 								displayName: 'Sort',
 								name: 'sort',
 								type: 'number',
 								default: 100,
-								description: 'Сортировка',
+								description: getTranslation('auxiliary.fields.sortDescription', lang),
 							},
 							{
 								displayName: 'Color',
 								name: 'color',
 								type: 'string',
 								default: '#00FF00',
-								description: 'Цвет статуса',
+								description: getTranslation('auxiliary.fields.statusColorDescription', lang),
 							},
 							{
 								displayName: 'Semantic',
@@ -334,24 +341,162 @@ export class Bitrix24Auxiliary implements INodeType {
 								type: 'options',
 								options: [
 									{
-										name: 'Процесс',
+										name: getTranslation('auxiliary.semantics.process', lang),
 										value: 'P',
 									},
 									{
-										name: 'Успех',
+										name: getTranslation('auxiliary.semantics.success', lang),
 										value: 'S',
 									},
 									{
-										name: 'Неудача',
+										name: getTranslation('auxiliary.semantics.failure', lang),
 										value: 'F',
 									},
 								],
 								default: 'P',
-								description: 'Семантика статуса',
+								description: getTranslation('auxiliary.fields.statusSemanticDescription', lang),
 							},
 						],
 					},
 				],
+			},
+			// ===== Поля для Типа смарт-процесса =====
+			{
+				displayName: getTranslation('smartProcess.fields.id', lang),
+				name: 'smartProcessId',
+				type: 'number',
+				default: 0,
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['smartProcessType'],
+						operation: ['get', 'update', 'delete'],
+					},
+				},
+				description: getTranslation('smartProcess.fields.idDescription', lang),
+			},
+			{
+				displayName: getTranslation('smartProcess.fields.title', lang),
+				name: 'smartProcessTitle',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['smartProcessType'],
+						operation: ['create'],
+					},
+				},
+				description: getTranslation('smartProcess.fields.titleDescription', lang),
+			},
+			{
+				displayName: getTranslation('smartProcess.fields.title', lang),
+				name: 'smartProcessTitle',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['smartProcessType'],
+						operation: ['update'],
+					},
+				},
+				description: getTranslation('smartProcess.fields.titleDescription', lang),
+			},
+			{
+				displayName: getTranslation('smartProcess.fields.isStagesEnabled', lang),
+				name: 'isStagesEnabled',
+				type: 'boolean',
+				default: false,
+				displayOptions: { show: { resource: ['smartProcessType'], operation: ['create', 'update'] } },
+				description: getTranslation('smartProcess.fields.isStagesEnabledDescription', lang),
+			},
+			{
+				displayName: getTranslation('smartProcess.fields.isCategoriesEnabled', lang),
+				name: 'isCategoriesEnabled',
+				type: 'boolean',
+				default: false,
+				displayOptions: { show: { resource: ['smartProcessType'], operation: ['create', 'update'] } },
+				description: getTranslation('smartProcess.fields.isCategoriesEnabledDescription', lang),
+			},
+			{
+				displayName: getTranslation('smartProcess.fields.isClientEnabled', lang),
+				name: 'isClientEnabled',
+				type: 'boolean',
+				default: false,
+				displayOptions: { show: { resource: ['smartProcessType'], operation: ['create', 'update'] } },
+				description: getTranslation('smartProcess.fields.isClientEnabledDescription', lang),
+			},
+			{
+				displayName: getTranslation('smartProcess.fields.isBeginCloseDatesEnabled', lang),
+				name: 'isBeginCloseDatesEnabled',
+				type: 'boolean',
+				default: false,
+				displayOptions: { show: { resource: ['smartProcessType'], operation: ['create', 'update'] } },
+				description: getTranslation('smartProcess.fields.isBeginCloseDatesEnabledDescription', lang),
+			},
+			{
+				displayName: getTranslation('smartProcess.fields.isLinkWithProductsEnabled', lang),
+				name: 'isLinkWithProductsEnabled',
+				type: 'boolean',
+				default: false,
+				displayOptions: { show: { resource: ['smartProcessType'], operation: ['create', 'update'] } },
+				description: getTranslation('smartProcess.fields.isLinkWithProductsEnabledDescription', lang),
+			},
+			{
+				displayName: getTranslation('smartProcess.fields.isObserversEnabled', lang),
+				name: 'isObserversEnabled',
+				type: 'boolean',
+				default: false,
+				displayOptions: { show: { resource: ['smartProcessType'], operation: ['create', 'update'] } },
+				description: getTranslation('smartProcess.fields.isObserversEnabledDescription', lang),
+			},
+			{
+				displayName: getTranslation('smartProcess.fields.isSourceEnabled', lang),
+				name: 'isSourceEnabled',
+				type: 'boolean',
+				default: false,
+				displayOptions: { show: { resource: ['smartProcessType'], operation: ['create', 'update'] } },
+				description: getTranslation('smartProcess.fields.isSourceEnabledDescription', lang),
+			},
+			{
+				displayName: getTranslation('smartProcess.fields.isAutomationEnabled', lang),
+				name: 'isAutomationEnabled',
+				type: 'boolean',
+				default: false,
+				displayOptions: { show: { resource: ['smartProcessType'], operation: ['create', 'update'] } },
+				description: getTranslation('smartProcess.fields.isAutomationEnabledDescription', lang),
+			},
+			{
+				displayName: getTranslation('smartProcess.fields.isBizProcEnabled', lang),
+				name: 'isBizProcEnabled',
+				type: 'boolean',
+				default: false,
+				displayOptions: { show: { resource: ['smartProcessType'], operation: ['create', 'update'] } },
+				description: getTranslation('smartProcess.fields.isBizProcEnabledDescription', lang),
+			},
+			{
+				displayName: getTranslation('smartProcess.fields.isDocumentsEnabled', lang),
+				name: 'isDocumentsEnabled',
+				type: 'boolean',
+				default: false,
+				displayOptions: { show: { resource: ['smartProcessType'], operation: ['create', 'update'] } },
+				description: getTranslation('smartProcess.fields.isDocumentsEnabledDescription', lang),
+			},
+			{
+				displayName: getTranslation('smartProcess.fields.isRecyclebinEnabled', lang),
+				name: 'isRecyclebinEnabled',
+				type: 'boolean',
+				default: false,
+				displayOptions: { show: { resource: ['smartProcessType'], operation: ['create', 'update'] } },
+				description: getTranslation('smartProcess.fields.isRecyclebinEnabledDescription', lang),
+			},
+			{
+				displayName: getTranslation('smartProcess.fields.isMycompanyEnabled', lang),
+				name: 'isMycompanyEnabled',
+				type: 'boolean',
+				default: false,
+				displayOptions: { show: { resource: ['smartProcessType'], operation: ['create', 'update'] } },
+				description: getTranslation('smartProcess.fields.isMycompanyEnabledDescription', lang),
 			},
 		],
 	};
@@ -363,26 +508,6 @@ export class Bitrix24Auxiliary implements INodeType {
 		const operation = this.getNodeParameter('operation', 0) as string;
 
 		try {
-			const credentials = await this.getCredentials('bitrix24Api');
-			if (!credentials) {
-				throw new NodeOperationError(this.getNode(), 'No credentials got returned!');
-			}
-
-			const webhookUrl = credentials.webhookUrl as string;
-			if (!webhookUrl) {
-				throw new NodeOperationError(this.getNode(), 'Webhook URL is required!');
-			}
-			
-			// Установка языка из учетных данных
-			if (credentials.language) {
-				process.env.N8N_DEFAULT_LANGUAGE = credentials.language as string;
-				console.log(`Установлен язык из учетных данных: ${credentials.language}`);
-			} else {
-				// По умолчанию устанавливаем русский
-				process.env.N8N_DEFAULT_LANGUAGE = 'ru';
-				console.log('Установлен язык по умолчанию: ru');
-			}
-
 			for (let i = 0; i < items.length; i++) {
 				try {
 					if (resource === 'category') {
@@ -409,12 +534,16 @@ export class Bitrix24Auxiliary implements INodeType {
 										id?: string;
 									};
 
-									const endpoint = `${webhookUrl}crm.category.${operation === 'create' ? 'add' : 'update'}`;
-									const response = await axios.post(endpoint, params);
-									if (response.data && response.data.result) {
+									const response = await bitrix24ApiRequest.call(
+										this,
+										'POST',
+										`crm.category.${operation === 'create' ? 'add' : 'update'}`,
+										params as unknown as IDataObject,
+									);
+									if (response && response.result) {
 										returnData.push({
 											success: true,
-											id: response.data.result,
+											id: response.result,
 											...params.fields,
 										});
 									}
@@ -445,12 +574,16 @@ export class Bitrix24Auxiliary implements INodeType {
 									params.id = this.getNodeParameter('id', i) as string;
 								}
 
-								const endpoint = `${webhookUrl}crm.category.${operation === 'create' ? 'add' : 'update'}`;
-								const response = await axios.post(endpoint, params);
-								if (response.data && response.data.result) {
+								const response = await bitrix24ApiRequest.call(
+									this,
+									'POST',
+									`crm.category.${operation === 'create' ? 'add' : 'update'}`,
+									params as unknown as IDataObject,
+								);
+								if (response && response.result) {
 									returnData.push({
 										success: true,
-										id: response.data.result,
+										id: response.result,
 										...params.fields,
 									});
 								}
@@ -459,23 +592,21 @@ export class Bitrix24Auxiliary implements INodeType {
 
 						if (operation === 'get') {
 							const categoryId = this.getNodeParameter('id', i) as string;
-							const endpoint = `${webhookUrl}crm.category.get`;
-							const response = await axios.post(endpoint, { 
+							const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.category.get', {
 								entityTypeId: 2,
-								id: categoryId
+								id: categoryId,
 							});
-							if (response.data && response.data.result) {
-								returnData.push(response.data.result);
+							if (response && response.result) {
+								returnData.push(response.result as IDataObject);
 							}
 						}
 
 						if (operation === 'getAll') {
-							const endpoint = `${webhookUrl}crm.category.list`;
-							const response = await axios.post(endpoint, {
-								entityTypeId: 2
+							const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.category.list', {
+								entityTypeId: 2,
 							});
-							if (response.data && response.data.result) {
-								const categories = Array.isArray(response.data.result) ? response.data.result : [response.data.result];
+							if (response && response.result) {
+								const categories = Array.isArray(response.result) ? response.result : [response.result];
 								returnData.push(...categories.map((category: IDataObject) => ({
 									...category,
 									id: category.ID,
@@ -485,12 +616,11 @@ export class Bitrix24Auxiliary implements INodeType {
 
 						if (operation === 'delete') {
 							const categoryId = this.getNodeParameter('id', i) as string;
-							const endpoint = `${webhookUrl}crm.category.delete`;
-							const response = await axios.post(endpoint, { 
+							const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.category.delete', {
 								entityTypeId: 2,
-								id: categoryId
+								id: categoryId,
 							});
-							if (response.data && response.data.result) {
+							if (response && response.result) {
 								returnData.push({ success: true, id: categoryId });
 							}
 						}
@@ -520,12 +650,16 @@ export class Bitrix24Auxiliary implements INodeType {
 										params.id = item.id as string;
 									}
 
-									const endpoint = `${webhookUrl}crm.status.${operation === 'create' ? 'add' : 'update'}`;
-									const response = await axios.post(endpoint, params);
-									if (response.data && response.data.result) {
+									const response = await bitrix24ApiRequest.call(
+										this,
+										'POST',
+										`crm.status.${operation === 'create' ? 'add' : 'update'}`,
+										params as unknown as IDataObject,
+									);
+									if (response && response.result) {
 										returnData.push({
 											success: true,
-											id: response.data.result,
+											id: response.result,
 											...params.fields,
 										});
 									}
@@ -553,12 +687,16 @@ export class Bitrix24Auxiliary implements INodeType {
 									params.id = statusId;
 								}
 
-								const endpoint = `${webhookUrl}crm.status.${operation === 'create' ? 'add' : 'update'}`;
-								const response = await axios.post(endpoint, params);
-								if (response.data && response.data.result) {
+								const response = await bitrix24ApiRequest.call(
+									this,
+									'POST',
+									`crm.status.${operation === 'create' ? 'add' : 'update'}`,
+									params as unknown as IDataObject,
+								);
+								if (response && response.result) {
 									returnData.push({
 										success: true,
-										id: response.data.result,
+										id: response.result,
 										...params.fields,
 									});
 								}
@@ -567,36 +705,90 @@ export class Bitrix24Auxiliary implements INodeType {
 
 						if (operation === 'get') {
 							const statusId = this.getNodeParameter('id', i) as string;
-							const endpoint = `${webhookUrl}crm.status.get`;
-							const response = await axios.post(endpoint, { id: statusId });
-							returnData.push(response.data);
+							const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.status.get', { id: statusId });
+							returnData.push(response);
 						}
 
 						if (operation === 'getAll') {
 							const categoryId = this.getNodeParameter('categoryId', i) as string;
 							const entityId = categoryId === '0' ? 'DEAL_STAGE' : `DEAL_STAGE_${categoryId}`;
-							
-							const endpoint = `${webhookUrl}crm.status.list`;
-							const response = await axios.post(endpoint, { 
-								filter: { 
-									ENTITY_ID: entityId
-								} 
+
+							const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.status.list', {
+								filter: {
+									ENTITY_ID: entityId,
+								},
 							});
-							if (response.data && response.data.result) {
-								returnData.push(...response.data.result);
+							if (response && response.result) {
+								returnData.push(...response.result);
 							}
 						}
 
 						if (operation === 'delete') {
 							const statusId = this.getNodeParameter('id', i) as string;
-							const endpoint = `${webhookUrl}crm.status.delete`;
-							const response = await axios.post(endpoint, { id: statusId });
-							returnData.push(response.data);
+							const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.status.delete', { id: statusId });
+							returnData.push(response);
+						}
+					}
+
+					if (resource === 'smartProcessType') {
+						if (operation === 'create' || operation === 'update') {
+							const fields: IDataObject = {};
+							const title = this.getNodeParameter('smartProcessTitle', i, '') as string;
+							if (title) {
+								fields.title = title;
+							}
+
+							const toggles = [
+								'isStagesEnabled', 'isCategoriesEnabled', 'isClientEnabled',
+								'isBeginCloseDatesEnabled', 'isLinkWithProductsEnabled', 'isObserversEnabled',
+								'isSourceEnabled', 'isAutomationEnabled', 'isBizProcEnabled',
+								'isDocumentsEnabled', 'isRecyclebinEnabled', 'isMycompanyEnabled',
+							];
+							for (const toggle of toggles) {
+								const val = this.getNodeParameter(toggle, i, false) as boolean;
+								fields[toggle] = val ? 'Y' : 'N';
+							}
+
+							if (operation === 'create') {
+								const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.type.add', { fields });
+								if (response && response.result) {
+									returnData.push(response.result.type || response.result);
+								}
+							} else {
+								const id = this.getNodeParameter('smartProcessId', i) as number;
+								const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.type.update', { id, fields });
+								if (response && response.result) {
+									returnData.push(response.result.type || response.result);
+								}
+							}
+						}
+
+						if (operation === 'get') {
+							const id = this.getNodeParameter('smartProcessId', i) as number;
+							const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.type.get', { id });
+							if (response && response.result) {
+								returnData.push(response.result.type || response.result);
+							}
+						}
+
+						if (operation === 'getAll') {
+							const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.type.list', {});
+							if (response && response.result && response.result.types) {
+								returnData.push(...response.result.types);
+							} else if (response && response.result) {
+								returnData.push(...(Array.isArray(response.result) ? response.result : [response.result]));
+							}
+						}
+
+						if (operation === 'delete') {
+							const id = this.getNodeParameter('smartProcessId', i) as number;
+							const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.type.delete', { id });
+							returnData.push(response && response.result ? response.result : { success: true });
 						}
 					}
 				} catch (error) {
 					if (this.continueOnFail()) {
-						if (error instanceof AxiosError) {
+						if (error instanceof Error) {
 							returnData.push({ error: error.message });
 						} else {
 							returnData.push({ error: 'An unknown error occurred' });
@@ -609,11 +801,10 @@ export class Bitrix24Auxiliary implements INodeType {
 
 			return [this.helpers.returnJsonArray(returnData)];
 		} catch (error) {
-			if (error instanceof AxiosError && error.response) {
-				const message = error.response.data.error_description || error.response.data.error;
-				throw new NodeOperationError(this.getNode(), `Bitrix24 API error: ${message}`);
+			if (error instanceof NodeOperationError) {
+				throw error;
 			}
-			throw error;
+			throw new NodeOperationError(this.getNode(), `Bitrix24 API error: ${(error as Error).message}`);
 		}
 	}
-} 
+}

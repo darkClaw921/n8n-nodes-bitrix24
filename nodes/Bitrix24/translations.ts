@@ -15,6 +15,7 @@ export interface ITranslations {
         deal: string;
         contact: string;
         company: string;
+        smartProcess: string;
     };
     
     // Операции
@@ -114,12 +115,163 @@ export interface ITranslations {
         filter: string;
         filterDescription: string;
     };
+
+    // Переводы для Bitrix24Auxiliary
+    auxiliary: {
+        displayName: string;
+        description: string;
+        resources: {
+            category: string;
+            status: string;
+        };
+        operations: {
+            create: { description: string; action: string; };
+            update: { description: string; action: string; };
+            get: { description: string; action: string; };
+            getAll: { description: string; action: string; };
+            delete: { description: string; action: string; };
+        };
+        fields: {
+            id: string;
+            idDescription: string;
+            name: string;
+            nameDescription: string;
+            sort: string;
+            sortDescription: string;
+            isDefault: string;
+            isDefaultDescription: string;
+            categoryId: string;
+            categoryIdDescription: string;
+            statusName: string;
+            statusNameDescription: string;
+            statusSort: string;
+            statusSortDescription: string;
+            statusColor: string;
+            statusColorDescription: string;
+            statusSemantic: string;
+            statusSemanticDescription: string;
+            multipleItems: string;
+            multipleItemsDescription: string;
+            items: string;
+            itemsDescription: string;
+            statusItems: string;
+            statusItemsDescription: string;
+        };
+        semantics: {
+            process: string;
+            success: string;
+            failure: string;
+        };
+    };
+
+    // Переводы для Bitrix24UserField
+    userField: {
+        displayName: string;
+        description: string;
+        operations: {
+            create: { description: string; action: string; };
+            update: { description: string; action: string; };
+            get: { description: string; action: string; };
+            getAll: { description: string; action: string; };
+            delete: { description: string; action: string; };
+        };
+        fieldTypes: {
+            string: string;
+            integer: string;
+            double: string;
+            boolean: string;
+            enumeration: string;
+            date: string;
+            datetime: string;
+            file: string;
+            money: string;
+            url: string;
+        };
+        fields: {
+            fieldId: string;
+            fieldIdDescription: string;
+            fieldName: string;
+            fieldNameDescription: string;
+            fieldLabel: string;
+            fieldLabelDescription: string;
+            fieldType: string;
+            fieldTypeDescription: string;
+            listValues: string;
+            listValuesDescription: string;
+            value: string;
+            valueDescription: string;
+            multiple: string;
+            multipleDescription: string;
+            mandatory: string;
+            mandatoryDescription: string;
+            showFilter: string;
+            showFilterDescription: string;
+            showInList: string;
+            showInListDescription: string;
+        };
+    };
+
+    // Переводы для Bitrix24SmartProcess
+    smartProcess: {
+        displayName: string;
+        description: string;
+        resources: {
+            type: string;
+            item: string;
+        };
+        operations: {
+            create: { description: string; action: string; };
+            get: { description: string; action: string; };
+            list: { description: string; action: string; };
+            update: { description: string; action: string; };
+            delete: { description: string; action: string; };
+        };
+        itemOperations: {
+            create: { description: string; action: string; };
+            get: { description: string; action: string; };
+            list: { description: string; action: string; };
+            update: { description: string; action: string; };
+            delete: { description: string; action: string; };
+        };
+        fields: {
+            entityTypeId: string;
+            entityTypeIdDescription: string;
+            title: string;
+            titleDescription: string;
+            id: string;
+            idDescription: string;
+            isStagesEnabled: string;
+            isStagesEnabledDescription: string;
+            isCategoriesEnabled: string;
+            isCategoriesEnabledDescription: string;
+            isClientEnabled: string;
+            isClientEnabledDescription: string;
+            isBeginCloseDatesEnabled: string;
+            isBeginCloseDatesEnabledDescription: string;
+            isLinkWithProductsEnabled: string;
+            isLinkWithProductsEnabledDescription: string;
+            isObserversEnabled: string;
+            isObserversEnabledDescription: string;
+            isSourceEnabled: string;
+            isSourceEnabledDescription: string;
+            isAutomationEnabled: string;
+            isAutomationEnabledDescription: string;
+            isBizProcEnabled: string;
+            isBizProcEnabledDescription: string;
+            isDocumentsEnabled: string;
+            isDocumentsEnabledDescription: string;
+            isRecyclebinEnabled: string;
+            isRecyclebinEnabledDescription: string;
+            isMycompanyEnabled: string;
+            isMycompanyEnabledDescription: string;
+        };
+    };
 }
 
 // Русские переводы
 const ru: ITranslations = {
-    displayName: 'Битрикс24',
-    description: 'Работа с Битрикс24 API',
+    displayName: 'Bitrix24',
+    description: 'Работа с Bitrix24 API',
     
     
     
@@ -128,6 +280,7 @@ const ru: ITranslations = {
         deal: 'Сделка',
         contact: 'Контакт',
         company: 'Компания',
+        smartProcess: 'Смарт-процесс',
     },
     
     operations: {
@@ -222,6 +375,154 @@ const ru: ITranslations = {
         filter: 'Фильтр',
         filterDescription: 'Получить по фильтру',
     },
+
+    auxiliary: {
+        displayName: 'Bitrix24 Auxiliary',
+        description: 'Управление вспомогательными сущностями в Bitrix24',
+        resources: {
+            category: 'Воронка продаж',
+            status: 'Статус воронки',
+        },
+        operations: {
+            create: { description: 'Создать элемент', action: 'Создать элемент' },
+            update: { description: 'Обновить элемент', action: 'Обновить элемент' },
+            get: { description: 'Получить элемент', action: 'Получить элемент' },
+            getAll: { description: 'Получить все элементы', action: 'Получить все элементы' },
+            delete: { description: 'Удалить элемент', action: 'Удалить элемент' },
+        },
+        fields: {
+            id: 'ID',
+            idDescription: 'ID воронки продаж',
+            name: 'Название',
+            nameDescription: 'Название воронки продаж',
+            sort: 'Сортировка',
+            sortDescription: 'Сортировка воронки',
+            isDefault: 'По умолчанию',
+            isDefaultDescription: 'Воронка по умолчанию',
+            categoryId: 'ID воронки',
+            categoryIdDescription: 'ID воронки продаж',
+            statusName: 'Название статуса',
+            statusNameDescription: 'Название статуса',
+            statusSort: 'Сортировка статуса',
+            statusSortDescription: 'Сортировка статуса',
+            statusColor: 'Цвет статуса',
+            statusColorDescription: 'Цвет статуса в формате HEX',
+            statusSemantic: 'Семантика статуса',
+            statusSemanticDescription: 'Семантика статуса (P - процесс, S - успех, F - неудача)',
+            multipleItems: 'Несколько элементов',
+            multipleItemsDescription: 'Создать несколько элементов',
+            items: 'Элементы',
+            itemsDescription: 'Список воронок для создания',
+            statusItems: 'Элементы',
+            statusItemsDescription: 'Список статусов для создания',
+        },
+        semantics: {
+            process: 'Процесс',
+            success: 'Успех',
+            failure: 'Неудача',
+        },
+    },
+
+    userField: {
+        displayName: 'Bitrix24 User Field',
+        description: 'Работа с пользовательскими полями в Bitrix24',
+        operations: {
+            create: { description: 'Создать пользовательское поле', action: 'Создать пользовательское поле' },
+            update: { description: 'Обновить пользовательское поле', action: 'Обновить пользовательское поле' },
+            get: { description: 'Получить пользовательское поле', action: 'Получить пользовательское поле' },
+            getAll: { description: 'Получить все пользовательские поля', action: 'Получить все пользовательские поля' },
+            delete: { description: 'Удалить пользовательское поле', action: 'Удалить пользовательское поле' },
+        },
+        fieldTypes: {
+            string: 'Строка',
+            integer: 'Целое число',
+            double: 'Дробное число',
+            boolean: 'Да/Нет',
+            enumeration: 'Список',
+            date: 'Дата',
+            datetime: 'Дата и время',
+            file: 'Файл',
+            money: 'Деньги',
+            url: 'URL',
+        },
+        fields: {
+            fieldId: 'ID поля',
+            fieldIdDescription: 'ID пользовательского поля',
+            fieldName: 'Название поля',
+            fieldNameDescription: 'Название поля (например: UF_CRM_CUSTOM_FIELD)',
+            fieldLabel: 'Отображаемое название',
+            fieldLabelDescription: 'Отображаемое название поля',
+            fieldType: 'Тип поля',
+            fieldTypeDescription: 'Тип пользовательского поля',
+            listValues: 'Значения списка',
+            listValuesDescription: 'Значения для списка',
+            value: 'Значение',
+            valueDescription: 'Значение элемента списка',
+            multiple: 'Множественное',
+            multipleDescription: 'Множественное поле',
+            mandatory: 'Обязательное',
+            mandatoryDescription: 'Обязательное поле',
+            showFilter: 'Показывать в фильтре',
+            showFilterDescription: 'Показывать в фильтре',
+            showInList: 'Показывать в списке',
+            showInListDescription: 'Показывать в списке',
+        },
+    },
+
+    smartProcess: {
+        displayName: 'Битрикс24 Смарт-процесс',
+        description: 'Управление смарт-процессами в Битрикс24',
+        resources: {
+            type: 'Смарт-процесс',
+            item: 'Элемент',
+        },
+        operations: {
+            create: { description: 'Создать смарт-процесс', action: 'Создать смарт-процесс' },
+            get: { description: 'Получить смарт-процесс', action: 'Получить смарт-процесс' },
+            list: { description: 'Получить список смарт-процессов', action: 'Получить список смарт-процессов' },
+            update: { description: 'Обновить смарт-процесс', action: 'Обновить смарт-процесс' },
+            delete: { description: 'Удалить смарт-процесс', action: 'Удалить смарт-процесс' },
+        },
+        itemOperations: {
+            create: { description: 'Создать элемент', action: 'Создать элемент' },
+            get: { description: 'Получить элемент', action: 'Получить элемент' },
+            list: { description: 'Получить список элементов', action: 'Получить список элементов' },
+            update: { description: 'Обновить элемент', action: 'Обновить элемент' },
+            delete: { description: 'Удалить элемент', action: 'Удалить элемент' },
+        },
+        fields: {
+            entityTypeId: 'Тип смарт-процесса',
+            entityTypeIdDescription: 'Выберите тип смарт-процесса',
+            title: 'Название',
+            titleDescription: 'Название смарт-процесса',
+            id: 'ID',
+            idDescription: 'ID смарт-процесса',
+            isStagesEnabled: 'Стадии',
+            isStagesEnabledDescription: 'Включить поддержку стадий',
+            isCategoriesEnabled: 'Категории',
+            isCategoriesEnabledDescription: 'Включить поддержку категорий (воронок)',
+            isClientEnabled: 'Клиент',
+            isClientEnabledDescription: 'Включить привязку клиента',
+            isBeginCloseDatesEnabled: 'Даты начала и завершения',
+            isBeginCloseDatesEnabledDescription: 'Включить даты начала и завершения',
+            isLinkWithProductsEnabled: 'Привязка товаров',
+            isLinkWithProductsEnabledDescription: 'Включить привязку товаров',
+            isObserversEnabled: 'Наблюдатели',
+            isObserversEnabledDescription: 'Включить поддержку наблюдателей',
+            isSourceEnabled: 'Источник',
+            isSourceEnabledDescription: 'Включить поле источника',
+            isAutomationEnabled: 'Автоматизация',
+            isAutomationEnabledDescription: 'Включить автоматизацию (роботы и триггеры)',
+            isBizProcEnabled: 'Бизнес-процессы',
+            isBizProcEnabledDescription: 'Включить бизнес-процессы',
+            isDocumentsEnabled: 'Документы',
+            isDocumentsEnabledDescription: 'Включить генерацию документов',
+            isRecyclebinEnabled: 'Корзина',
+            isRecyclebinEnabledDescription: 'Включить корзину (удалённые элементы)',
+            isMycompanyEnabled: 'Моя компания',
+            isMycompanyEnabledDescription: 'Включить привязку своей компании',
+        },
+    },
 };
 
 // Английские переводы
@@ -234,6 +535,7 @@ const en: ITranslations = {
         deal: 'Deal',
         contact: 'Contact',
         company: 'Company',
+        smartProcess: 'Smart Process',
     },
     
     operations: {
@@ -328,6 +630,154 @@ const en: ITranslations = {
         filter: 'Filter',
         filterDescription: 'Get by filter',
     },
+
+    auxiliary: {
+        displayName: 'Bitrix24 Auxiliary',
+        description: 'Manage auxiliary entities in Bitrix24',
+        resources: {
+            category: 'Sales Pipeline',
+            status: 'Pipeline Status',
+        },
+        operations: {
+            create: { description: 'Create an item', action: 'Create an item' },
+            update: { description: 'Update an item', action: 'Update an item' },
+            get: { description: 'Get an item', action: 'Get an item' },
+            getAll: { description: 'Get all items', action: 'Get all items' },
+            delete: { description: 'Delete an item', action: 'Delete an item' },
+        },
+        fields: {
+            id: 'ID',
+            idDescription: 'Sales pipeline ID',
+            name: 'Name',
+            nameDescription: 'Sales pipeline name',
+            sort: 'Sort',
+            sortDescription: 'Pipeline sort order',
+            isDefault: 'Is Default',
+            isDefaultDescription: 'Default pipeline',
+            categoryId: 'Category ID',
+            categoryIdDescription: 'Sales pipeline ID',
+            statusName: 'Status Name',
+            statusNameDescription: 'Status name',
+            statusSort: 'Status Sort',
+            statusSortDescription: 'Status sort order',
+            statusColor: 'Status Color',
+            statusColorDescription: 'Status color in HEX format',
+            statusSemantic: 'Status Semantic',
+            statusSemanticDescription: 'Status semantic (P - in progress, S - success, F - failure)',
+            multipleItems: 'Multiple Items',
+            multipleItemsDescription: 'Create multiple items',
+            items: 'Items',
+            itemsDescription: 'List of pipelines to create',
+            statusItems: 'Items',
+            statusItemsDescription: 'List of statuses to create',
+        },
+        semantics: {
+            process: 'In Progress',
+            success: 'Success',
+            failure: 'Failure',
+        },
+    },
+
+    userField: {
+        displayName: 'Bitrix24 User Field',
+        description: 'Manage user fields in Bitrix24',
+        operations: {
+            create: { description: 'Create a user field', action: 'Create a user field' },
+            update: { description: 'Update a user field', action: 'Update a user field' },
+            get: { description: 'Get a user field', action: 'Get a user field' },
+            getAll: { description: 'Get all user fields', action: 'Get all user fields' },
+            delete: { description: 'Delete a user field', action: 'Delete a user field' },
+        },
+        fieldTypes: {
+            string: 'String',
+            integer: 'Integer',
+            double: 'Double',
+            boolean: 'Yes/No',
+            enumeration: 'List',
+            date: 'Date',
+            datetime: 'Date and Time',
+            file: 'File',
+            money: 'Money',
+            url: 'URL',
+        },
+        fields: {
+            fieldId: 'Field ID',
+            fieldIdDescription: 'User field ID',
+            fieldName: 'Field Name',
+            fieldNameDescription: 'Field name (e.g., UF_CRM_CUSTOM_FIELD)',
+            fieldLabel: 'Field Label',
+            fieldLabelDescription: 'Display name of the field',
+            fieldType: 'Field Type',
+            fieldTypeDescription: 'User field type',
+            listValues: 'List Values',
+            listValuesDescription: 'Values for the list',
+            value: 'Value',
+            valueDescription: 'List item value',
+            multiple: 'Multiple',
+            multipleDescription: 'Multiple field',
+            mandatory: 'Mandatory',
+            mandatoryDescription: 'Mandatory field',
+            showFilter: 'Show in Filter',
+            showFilterDescription: 'Show in filter',
+            showInList: 'Show in List',
+            showInListDescription: 'Show in list',
+        },
+    },
+
+    smartProcess: {
+        displayName: 'Bitrix24 Smart Process',
+        description: 'Manage smart processes in Bitrix24',
+        resources: {
+            type: 'Smart Process',
+            item: 'Item',
+        },
+        operations: {
+            create: { description: 'Create a smart process', action: 'Create a smart process' },
+            get: { description: 'Get a smart process', action: 'Get a smart process' },
+            list: { description: 'Get list of smart processes', action: 'Get list of smart processes' },
+            update: { description: 'Update a smart process', action: 'Update a smart process' },
+            delete: { description: 'Delete a smart process', action: 'Delete a smart process' },
+        },
+        itemOperations: {
+            create: { description: 'Create an item', action: 'Create an item' },
+            get: { description: 'Get an item', action: 'Get an item' },
+            list: { description: 'Get list of items', action: 'Get list of items' },
+            update: { description: 'Update an item', action: 'Update an item' },
+            delete: { description: 'Delete an item', action: 'Delete an item' },
+        },
+        fields: {
+            entityTypeId: 'Smart Process Type',
+            entityTypeIdDescription: 'Select the smart process type',
+            title: 'Title',
+            titleDescription: 'Smart process title',
+            id: 'ID',
+            idDescription: 'Smart process ID',
+            isStagesEnabled: 'Stages',
+            isStagesEnabledDescription: 'Enable stages support',
+            isCategoriesEnabled: 'Categories',
+            isCategoriesEnabledDescription: 'Enable categories (pipelines) support',
+            isClientEnabled: 'Client',
+            isClientEnabledDescription: 'Enable client binding',
+            isBeginCloseDatesEnabled: 'Begin/Close Dates',
+            isBeginCloseDatesEnabledDescription: 'Enable begin and close dates',
+            isLinkWithProductsEnabled: 'Link with Products',
+            isLinkWithProductsEnabledDescription: 'Enable product linking',
+            isObserversEnabled: 'Observers',
+            isObserversEnabledDescription: 'Enable observers support',
+            isSourceEnabled: 'Source',
+            isSourceEnabledDescription: 'Enable source field',
+            isAutomationEnabled: 'Automation',
+            isAutomationEnabledDescription: 'Enable automation (robots and triggers)',
+            isBizProcEnabled: 'Business Processes',
+            isBizProcEnabledDescription: 'Enable business processes',
+            isDocumentsEnabled: 'Documents',
+            isDocumentsEnabledDescription: 'Enable document generation',
+            isRecyclebinEnabled: 'Recycle Bin',
+            isRecyclebinEnabledDescription: 'Enable recycle bin (deleted items)',
+            isMycompanyEnabled: 'My Company',
+            isMycompanyEnabledDescription: 'Enable own company binding',
+        },
+    },
 };
 
 // Словарь переводов
@@ -337,18 +787,17 @@ const translations: Record<SupportedLanguage, ITranslations> = {
 };
 
 // Определяем язык системы n8n
-export const detectLanguage = (): SupportedLanguage => {
-    // Проверяем наличие переменной окружения с языком
-    const envLanguage = process.env.N8N_DEFAULT_LANGUAGE;
-    console.log(`Текущий язык из переменной окружения: ${envLanguage}`);
-    
-    // Если переменная установлена и равна 'ru', возвращаем русский язык
-    if (envLanguage === 'ru') {
-        return 'ru';
+// Если передан language — используем его, иначе fallback на переменные окружения
+export const detectLanguage = (language?: string): SupportedLanguage => {
+    // Приоритет: явно переданный параметр > N8N_DEFAULT_LANGUAGE > N8N_DEFAULT_LOCALE > 'ru'
+    const lang = language || process.env.N8N_DEFAULT_LANGUAGE || process.env.N8N_DEFAULT_LOCALE;
+
+    if (lang === 'en') {
+        return 'en';
     }
 
-    // По умолчанию возвращаем английский
-    return 'en';
+    // По умолчанию возвращаем русский (основная аудитория — пользователи Bitrix24)
+    return 'ru';
 };
 
 // Получить переводы для конкретного языка

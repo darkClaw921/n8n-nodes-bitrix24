@@ -8,10 +8,14 @@ import {
 	ILoadOptionsFunctions,
 } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import axios, { AxiosError } from 'axios';
+
+// Импорт общих утилит
+import { bitrix24ApiRequest, bitrix24ApiRequestAllItems } from '../shared/GenericFunctions';
+import { buildBitrixFilter } from '../shared/FilterBuilder';
+import { getDefaultFieldsForResource } from '../shared/DefaultFields';
 
 // Импорт типов и сущностей
-import { IBitrix24Field, processFormFields, getAllItems, CommunicationType, BitrixResourceType } from './types';
+import { IBitrix24Field, processFormFields, CommunicationType, BitrixResourceType } from './types';
 import { Lead } from './Lead';
 import { Deal } from './Deal';
 import { Contact } from './Contact';
@@ -24,7 +28,7 @@ export class Bitrix24 implements INodeType {
 		displayName: 'Bitrix24',
 		name: 'bitrix24',
 		icon: 'file:bitrix24.svg',
-		
+
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
@@ -51,6 +55,10 @@ export class Bitrix24 implements INodeType {
 					Deal.getDescription(),
 					Contact.getDescription(),
 					Company.getDescription(),
+					{
+						name: 'Smart Process',
+						value: 'smartProcess',
+					},
 				],
 				default: 'lead',
 				required: true,
@@ -95,7 +103,24 @@ export class Bitrix24 implements INodeType {
 				default: 'create',
 				required: true,
 			},
-			// ID поле
+			// Тип смарт-процесса (только для smartProcess)
+			{
+				displayName: getTranslation('smartProcess.fields.entityTypeId'),
+				name: 'entityTypeId',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getSmartProcessTypes',
+				},
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['smartProcess'],
+					},
+				},
+				description: getTranslation('smartProcess.fields.entityTypeIdDescription'),
+			},
+			// Получить по ID или фильтру
 			{
 				displayName: getTranslation('getByOptions.getBy'),
 				name: 'getBy',
@@ -213,7 +238,7 @@ export class Bitrix24 implements INodeType {
 			{
 				displayName: getTranslation('fields.inputFormat'),
 				name: 'inputFormat',
-				type: 'options',	
+				type: 'options',
 				options: [
 					{
 						name: getTranslation('inputFormat.form'),
@@ -449,42 +474,53 @@ export class Bitrix24 implements INodeType {
 
 	methods = {
 		loadOptions: {
+			async getSmartProcessTypes(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				try {
+					const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.type.list', {});
+					if (!response || !response.result || !response.result.types) {
+						return [];
+					}
+					const types = response.result.types as Array<{ title: string; entityTypeId: number }>;
+					return types
+						.map((type) => ({
+							name: type.title,
+							value: type.entityTypeId,
+						}))
+						.sort((a, b) => (a.name as string).localeCompare(b.name as string));
+				} catch (error) {
+					if (error instanceof NodeOperationError) {
+						throw error;
+					}
+					throw new NodeOperationError(
+						this.getNode(),
+						'Failed to load smart process types: ' + (error as Error).message,
+					);
+				}
+			},
+
 			async getFields(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
 				try {
-					const credentials = await this.getCredentials('bitrix24Api');
-					if (!credentials) {
-						throw new NodeOperationError(this.getNode(), 'No credentials got returned!');
-					}
-
 					const resource = this.getCurrentNodeParameter('resource') as string;
-					const webhookUrl = credentials.webhookUrl as string;
-					
-					if (!webhookUrl) {
-						throw new NodeOperationError(this.getNode(), 'Webhook URL is required!');
-					}
-					
-					const endpoint = `${webhookUrl}crm.${resource}.fields`;
-					const response = await axios.get(endpoint);
-					
-					if (!response.data || !response.data.result) {
-						throw new NodeOperationError(this.getNode(), 'Invalid response from Bitrix24!');
+
+					let fieldsData: Record<string, IBitrix24Field>;
+
+					if (resource === 'smartProcess') {
+						const entityTypeId = this.getCurrentNodeParameter('entityTypeId') as number;
+						if (!entityTypeId) return [];
+						const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.item.fields', { entityTypeId });
+						if (!response || !response.result || !response.result.fields) return [];
+						fieldsData = response.result.fields as Record<string, IBitrix24Field>;
+					} else {
+						const response = await bitrix24ApiRequest.call(this, 'GET', `crm.${resource}.fields`);
+						if (!response || !response.result) {
+							throw new NodeOperationError(this.getNode(), 'Invalid response from Bitrix24!');
+						}
+						fieldsData = response.result as Record<string, IBitrix24Field>;
 					}
 
-					const fields = response.data.result as Record<string, IBitrix24Field>;
 					const options: INodePropertyOptions[] = [];
-					
-					// Логируем поля телефона и email для диагностики
-					console.log('Поля сущности:', resource);
-					
-					console.log('Язык:', process.env.N8N_DEFAULT_LANGUAGE);
-					// console.log('Поля:', fields);
-					Object.keys(fields).forEach(key => {
-						if (key.includes('PHONE') || key.includes('EMAIL')) {
-							console.log(`Поле: ${key}, Тип: ${fields[key].type}`);
-						}
-					});
-					
-					for (const [key, value] of Object.entries(fields)) {
+
+					for (const [key, value] of Object.entries(fieldsData)) {
 						const fieldName = value.formLabel || value.listLabel || value.title || key;
 						const description = [
 							`Тип: ${value.type}`,
@@ -499,7 +535,7 @@ export class Bitrix24 implements INodeType {
 							description,
 						});
 					}
-					
+
 					return options;
 				} catch (error) {
 					if (error instanceof NodeOperationError) {
@@ -511,20 +547,10 @@ export class Bitrix24 implements INodeType {
 
 			async getEnumValues(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
 				try {
-					const credentials = await this.getCredentials('bitrix24Api');
-					if (!credentials) {
-						throw new NodeOperationError(this.getNode(), 'No credentials got returned!');
-					}
-
 					const resource = this.getCurrentNodeParameter('resource') as string;
-					const fieldsData = this.getCurrentNodeParameter('fields') as { field: Array<{ fieldName: string; fieldValue: string }> };
-					const fieldName = fieldsData?.field?.[0]?.fieldName;
-					const webhookUrl = credentials.webhookUrl as string;
+					const fieldsRaw = this.getCurrentNodeParameter('fields') as { field: Array<{ fieldName: string; fieldValue: string }> };
+					const fieldName = fieldsRaw?.field?.[0]?.fieldName;
 
-					if (!webhookUrl) {
-						throw new NodeOperationError(this.getNode(), 'Webhook URL is required!');
-					}
-					
 					if (!fieldName) {
 						return [
 							{
@@ -534,19 +560,26 @@ export class Bitrix24 implements INodeType {
 							},
 						];
 					}
-					
-					const endpoint = `${webhookUrl}crm.${resource}.fields`;
-					const response = await axios.get(endpoint);
-					
-					if (!response.data || !response.data.result) {
-						throw new NodeOperationError(this.getNode(), 'Invalid response from Bitrix24!');
+
+					let fieldsInfo: Record<string, IBitrix24Field>;
+
+					if (resource === 'smartProcess') {
+						const entityTypeId = this.getCurrentNodeParameter('entityTypeId') as number;
+						if (!entityTypeId) return [];
+						const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.item.fields', { entityTypeId });
+						if (!response || !response.result || !response.result.fields) return [];
+						fieldsInfo = response.result.fields as Record<string, IBitrix24Field>;
+					} else {
+						const response = await bitrix24ApiRequest.call(this, 'GET', `crm.${resource}.fields`);
+						if (!response || !response.result) {
+							throw new NodeOperationError(this.getNode(), 'Invalid response from Bitrix24!');
+						}
+						fieldsInfo = response.result as Record<string, IBitrix24Field>;
 					}
 
-					const fieldsInfo = response.data.result as Record<string, IBitrix24Field>;
 					const field = fieldsInfo[fieldName];
 
 					if (!field) {
-						console.log('Field not found in response');
 						return [
 							{
 								name: '- Поле не найдено -',
@@ -556,10 +589,7 @@ export class Bitrix24 implements INodeType {
 						];
 					}
 
-					// Устанавливаем тип поля для текущего элемента в коллекции
 					if (field.type === 'enumeration') {
-						// Проверяем, что это поле типа перечисление
-						// Возвращаем список значений для выбора
 						if (field.items && Array.isArray(field.items)) {
 							return field.items.map((item: { ID: string; VALUE: string }) => ({
 								name: item.VALUE,
@@ -577,7 +607,6 @@ export class Bitrix24 implements INodeType {
 						},
 					];
 				} catch (error) {
-					console.error('Error in getEnumValues:', error);
 					if (error instanceof NodeOperationError) {
 						throw error;
 					}
@@ -589,26 +618,6 @@ export class Bitrix24 implements INodeType {
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		try {
-			const credentials = await this.getCredentials('bitrix24Api');
-			if (!credentials) {
-				throw new NodeOperationError(this.getNode(), 'No credentials got returned!');
-			}
-
-			const webhookUrl = credentials.webhookUrl as string;
-			if (!webhookUrl) {
-				throw new NodeOperationError(this.getNode(), 'Webhook URL is required!');
-			}
-			
-			// Установка языка из учетных данных
-			if (credentials.language) {
-				process.env.N8N_DEFAULT_LANGUAGE = credentials.language as string;
-				console.log(`Установлен язык из учетных данных: ${credentials.language}`);
-			} else {
-				// По умолчанию устанавливаем русский
-				process.env.N8N_DEFAULT_LANGUAGE = 'ru';
-				console.log('Установлен язык по умолчанию: ru');
-			}
-
 			const items = this.getInputData();
 			const returnData: IDataObject[] = [];
 			const resource = this.getNodeParameter('resource', 0) as string;
@@ -616,216 +625,268 @@ export class Bitrix24 implements INodeType {
 
 			for (let i = 0; i < items.length; i++) {
 				try {
-					if (operation === 'create' || operation === 'update') {
-						const endpoint = `${webhookUrl}crm.${resource}.${operation === 'create' ? 'add' : 'update'}.json`;
-						const inputFormat = this.getNodeParameter('inputFormat', i) as string;
-						let fields: IDataObject = {};
+					if (resource === 'smartProcess') {
+						// ===== Smart Process Items (crm.item.*) =====
+						const entityTypeId = this.getNodeParameter('entityTypeId', i) as number;
 
-						if (inputFormat === 'json') {
-							const fieldsJson = this.getNodeParameter('fieldsJson', i) as string;
-							fields = JSON.parse(fieldsJson);
-						} else {
-							// Получаем информацию о полях
-							const fieldsEndpoint = `${webhookUrl}crm.${resource}.fields.json`;
-							const fieldsResponse = await axios.get(fieldsEndpoint);
-							const fieldsInfo = fieldsResponse.data.result as Record<string, IBitrix24Field>;
+						if (operation === 'create' || operation === 'update') {
+							const inputFormat = this.getNodeParameter('inputFormat', i) as string;
+							let fields: IDataObject = {};
 
-							// Получаем коллекцию полей
-							const fieldsCollection = this.getNodeParameter('fields.field', i, []) as Array<{
-								fieldName: string;
-								fieldValue: string;
-								fieldValueType?: string;
-							}>;
-
-							// Добавляем информацию о поле и ресурсе к каждому элементу коллекции
-							const enrichedFieldsCollection = fieldsCollection.map(field => {
-								const fieldInfo = fieldsInfo[field.fieldName];
-								// Определяем тип поля на основе данных из API
-								let updatedFieldValueType = field.fieldValueType;
-								
-								// Если поле типа enumeration, устанавливаем соответствующий тип
-								if (fieldInfo && fieldInfo.type === 'enumeration') {
-									updatedFieldValueType = 'enumeration';
+							if (inputFormat === 'json') {
+								fields = JSON.parse(this.getNodeParameter('fieldsJson', i) as string);
+							} else {
+								const fieldsCollection = this.getNodeParameter('fields.field', i, []) as Array<{
+									fieldName: string;
+									fieldValue: string;
+								}>;
+								for (const f of fieldsCollection) {
+									fields[f.fieldName] = f.fieldValue;
 								}
-								
-								return {
-									...field,
-									fieldValueType: updatedFieldValueType,
-									resource: resource as BitrixResourceType,
-									field: fieldInfo,
-								};
-							});
+							}
 
-							// Логируем поля для контакта и телефона/email
-							if (resource === 'contact') {
-								const phoneEmailFields = enrichedFieldsCollection.filter(
-									field => field.fieldName.includes('PHONE') || field.fieldName.includes('EMAIL')
+							const params: IDataObject = { entityTypeId, fields };
+							if (operation === 'update') {
+								params.id = parseInt(this.getNodeParameter('id', i) as string, 10);
+							}
+
+							const endpoint = operation === 'create' ? 'crm.item.add' : 'crm.item.update';
+							const response = await bitrix24ApiRequest.call(this, 'POST', endpoint, params);
+							if (response?.result?.item) {
+								returnData.push(response.result.item);
+							} else if (response?.result) {
+								returnData.push(response.result);
+							}
+						}
+
+						if (operation === 'get') {
+							const getBy = this.getNodeParameter('getBy', i) as string;
+							const selectFields = this.getNodeParameter('selectFields', i, []) as string[];
+
+							if (getBy === 'id') {
+								const id = parseInt(this.getNodeParameter('id', i) as string, 10);
+								const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.item.get', { entityTypeId, id });
+								if (response?.result?.item) {
+									returnData.push(response.result.item);
+								} else {
+									returnData.push({ error: 'Запись не найдена' });
+								}
+							} else {
+								const filterFields = this.getNodeParameter('filterFields.field', i, []) as Array<{
+									fieldName: string;
+									operation: string;
+									value: string;
+								}>;
+								const params: IDataObject = { entityTypeId };
+								if (selectFields.length > 0) {
+									params.select = selectFields;
+								}
+								if (filterFields.length > 0) {
+									params.filter = buildBitrixFilter(filterFields);
+								}
+								const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.item.list', params);
+								if (response?.result?.items && response.result.items.length > 0) {
+									returnData.push(response.result.items[0]);
+								} else {
+									returnData.push({ error: 'Запись не найдена' });
+								}
+							}
+						}
+
+						if (operation === 'list') {
+							const returnAll = this.getNodeParameter('returnAll', i) as boolean;
+							const selectFields = this.getNodeParameter('selectFields', i, []) as string[];
+							const useFilter = this.getNodeParameter('useFilter', i) as boolean;
+
+							const params: IDataObject = { entityTypeId };
+							if (selectFields.length > 0) {
+								params.select = selectFields;
+							}
+							if (useFilter) {
+								const filterFields = this.getNodeParameter('filterFields.field', i, []) as Array<{
+									fieldName: string;
+									operation: string;
+									value: string;
+								}>;
+								if (filterFields.length > 0) {
+									params.filter = buildBitrixFilter(filterFields);
+								}
+							}
+
+							if (returnAll) {
+								// crm.item.list возвращает items в response.result.items
+								let start = 0;
+								const batchSize = 50;
+								let hasMore = true;
+								while (hasMore) {
+									const batchParams: IDataObject = { ...params, start };
+									const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.item.list', batchParams);
+									const resultItems = response?.result?.items;
+									if (!Array.isArray(resultItems) || resultItems.length === 0) {
+										break;
+									}
+									returnData.push(...resultItems as IDataObject[]);
+									if (resultItems.length < batchSize) {
+										hasMore = false;
+									} else {
+										start += batchSize;
+										await new Promise(resolve => setTimeout(resolve, 1000));
+									}
+								}
+							} else {
+								const limit = this.getNodeParameter('limit', i) as number;
+								params.start = 0;
+								const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.item.list', params);
+								if (response?.result?.items && Array.isArray(response.result.items)) {
+									returnData.push(...(response.result.items as IDataObject[]).slice(0, limit));
+								}
+							}
+						}
+
+						if (operation === 'delete') {
+							const id = parseInt(this.getNodeParameter('id', i) as string, 10);
+							await bitrix24ApiRequest.call(this, 'POST', 'crm.item.delete', { entityTypeId, id });
+							returnData.push({ success: true, id });
+						}
+					} else {
+						// ===== Regular CRM entities (lead/deal/contact/company) =====
+						if (operation === 'create' || operation === 'update') {
+							const inputFormat = this.getNodeParameter('inputFormat', i) as string;
+							let fields: IDataObject = {};
+
+							if (inputFormat === 'json') {
+								const fieldsJson = this.getNodeParameter('fieldsJson', i) as string;
+								fields = JSON.parse(fieldsJson);
+							} else {
+								const fieldsResponse = await bitrix24ApiRequest.call(this, 'GET', `crm.${resource}.fields.json`);
+								const fieldsInfo = fieldsResponse.result as Record<string, IBitrix24Field>;
+
+								const fieldsCollection = this.getNodeParameter('fields.field', i, []) as Array<{
+									fieldName: string;
+									fieldValue: string;
+									fieldValueType?: string;
+								}>;
+
+								const enrichedFieldsCollection = fieldsCollection.map(field => {
+									const fieldInfo = fieldsInfo[field.fieldName];
+									let updatedFieldValueType = field.fieldValueType;
+									if (fieldInfo && fieldInfo.type === 'enumeration') {
+										updatedFieldValueType = 'enumeration';
+									}
+									return {
+										...field,
+										fieldValueType: updatedFieldValueType,
+										resource: resource as BitrixResourceType,
+										field: fieldInfo,
+									};
+								});
+
+								fields = processFormFields(enrichedFieldsCollection);
+							}
+
+							const params: IDataObject = { fields };
+							if (operation === 'update') {
+								params.id = this.getNodeParameter('id', i) as string;
+							}
+
+							const response = await bitrix24ApiRequest.call(
+								this,
+								'POST',
+								`crm.${resource}.${operation === 'create' ? 'add' : 'update'}.json`,
+								params,
+							);
+							returnData.push(response);
+						}
+
+						if (operation === 'get') {
+							const getBy = this.getNodeParameter('getBy', i) as string;
+							const selectFields = this.getNodeParameter('selectFields', i, []) as string[];
+
+							const params: IDataObject = {};
+							if (selectFields.length > 0) {
+								params.select = selectFields;
+							} else {
+								params.select = getDefaultFieldsForResource(resource);
+							}
+
+							if (getBy === 'id') {
+								const id = this.getNodeParameter('id', i) as string;
+								params.filter = { 'ID': id };
+							} else {
+								const filterFields = this.getNodeParameter('filterFields.field', i, []) as Array<{
+									fieldName: string;
+									operation: string;
+									value: string;
+								}>;
+
+								if (filterFields.length > 0) {
+									params.filter = buildBitrixFilter(filterFields);
+								}
+							}
+
+							const response = await bitrix24ApiRequest.call(this, 'POST', `crm.${resource}.list.json`, params);
+							if (response.result && response.result.length > 0) {
+								returnData.push(response.result[0]);
+							} else {
+								returnData.push({ error: 'Запись не найдена' });
+							}
+						}
+
+						if (operation === 'list') {
+							const returnAll = this.getNodeParameter('returnAll', i) as boolean;
+							const selectFields = this.getNodeParameter('selectFields', i, []) as string[];
+							const useFilter = this.getNodeParameter('useFilter', i) as boolean;
+
+							const params: IDataObject = {};
+							if (selectFields.length > 0) {
+								params.select = selectFields;
+							} else {
+								params.select = getDefaultFieldsForResource(resource);
+							}
+
+							if (useFilter) {
+								const filterFields = this.getNodeParameter('filterFields.field', i, []) as Array<{
+									fieldName: string;
+									operation: string;
+									value: string;
+								}>;
+
+								if (filterFields.length > 0) {
+									params.filter = buildBitrixFilter(filterFields);
+								}
+							}
+
+							if (!returnAll) {
+								const limit = this.getNodeParameter('limit', i) as number;
+								params.start = 0;
+								params.limit = limit;
+								const response = await bitrix24ApiRequest.call(this, 'POST', `crm.${resource}.list.json`, params);
+								returnData.push(...response.result);
+							} else {
+								const allItems = await bitrix24ApiRequestAllItems.call(
+									this,
+									`crm.${resource}.list.json`,
+									params,
 								);
-								if (phoneEmailFields.length > 0) {
-									console.log('Поля связи для контакта:', phoneEmailFields);
-								}
-							}
-
-							fields = processFormFields(enrichedFieldsCollection);
-						}
-						
-						const params: IDataObject = { fields };
-						if (operation === 'update') {
-							params.id = this.getNodeParameter('id', i) as string;
-						}
-
-						const response = await axios.post(endpoint, params);
-						returnData.push(response.data);
-					}
-					
-					if (operation === 'get') {
-						const getBy = this.getNodeParameter('getBy', i) as string;
-						const endpoint = `${webhookUrl}crm.${resource}.list.json`;
-						const selectFields = this.getNodeParameter('selectFields', i, []) as string[];
-						
-						const params: IDataObject = {};
-						if (selectFields.length > 0) {
-							params.select = selectFields;
-						} else {
-							// Использовать стандартные поля для сущности, если не выбраны конкретные поля
-							switch(resource) {
-								case Lead.resource:
-									params.select = Lead.getDefaultFields();
-									break;
-								case Deal.resource:
-									params.select = Deal.getDefaultFields();
-									break;
-								case Contact.resource:
-									params.select = Contact.getDefaultFields();
-									break;
-								case Company.resource:
-									params.select = Company.getDefaultFields();
-									break;
+								returnData.push(...allItems);
 							}
 						}
 
-						if (getBy === 'id') {
+						if (operation === 'delete') {
 							const id = this.getNodeParameter('id', i) as string;
-							params.filter = { 'ID': id };
-						} else {
-							const filterFields = this.getNodeParameter('filterFields.field', i, []) as Array<{
-								fieldName: string;
-								operation: string;
-								value: string;
-							}>;
 
-							if (filterFields.length > 0) {
-								const filter: IDataObject = {};
-								
-								for (const field of filterFields) {
-									let value = field.value;
-
-									// Обработка специальных операторов
-									if (field.operation === '@' || field.operation === '!@') {
-										value = value.split(',').map(item => item.trim()) as unknown as string;
-									}
-
-									// Формируем ключ фильтра в зависимости от операции
-									if (field.operation === 'equals') {
-										filter[field.fieldName] = value;
-									} else {
-										filter[field.operation + field.fieldName] = value;
-									}
-								}
-
-								params.filter = filter;
-							}
+							const response = await bitrix24ApiRequest.call(
+								this,
+								'POST',
+								`crm.${resource}.delete.json`,
+								{ id },
+							);
+							returnData.push(response);
 						}
-
-						const response = await axios.post(endpoint, params);
-						if (response.data.result && response.data.result.length > 0) {
-							returnData.push(response.data.result[0]);
-						} else {
-							returnData.push({ error: 'Запись не найдена' });
-						}
-					}
-
-					if (operation === 'list') {
-						const returnAll = this.getNodeParameter('returnAll', i) as boolean;
-						const selectFields = this.getNodeParameter('selectFields', i, []) as string[];
-						const useFilter = this.getNodeParameter('useFilter', i) as boolean;
-						const endpoint = `${webhookUrl}crm.${resource}.list.json`;
-						
-						const params: IDataObject = {};
-						if (selectFields.length > 0) {
-							params.select = selectFields;
-						} else {
-							// Использовать стандартные поля для сущности, если не выбраны конкретные поля
-							switch(resource) {
-								case Lead.resource:
-									params.select = Lead.getDefaultFields();
-									break;
-								case Deal.resource:
-									params.select = Deal.getDefaultFields();
-									break;
-								case Contact.resource:
-									params.select = Contact.getDefaultFields();
-									break;
-								case Company.resource:
-									params.select = Company.getDefaultFields();
-									break;
-							}
-						}
-
-						// Добавляем обработку фильтров
-						if (useFilter) {
-							const filterFields = this.getNodeParameter('filterFields.field', i, []) as Array<{
-								fieldName: string;
-								operation: string;
-								value: string;
-							}>;
-
-							if (filterFields.length > 0) {
-								const filter: IDataObject = {};
-								
-								for (const field of filterFields) {
-									let value = field.value;
-
-									// Обработка специальных операторов
-									if (field.operation === '@' || field.operation === '!@') {
-										value = value.split(',').map(item => item.trim()) as unknown as string;
-									}
-
-									// Формируем ключ фильтра в зависимости от операции
-									if (field.operation === 'equals') {
-										filter[field.fieldName] = value;
-									} else {
-										filter[field.operation + field.fieldName] = value;
-									}
-								}
-
-								params.filter = filter;
-							}
-						}
-						
-						if (!returnAll) {
-							const limit = this.getNodeParameter('limit', i) as number;
-							params.start = 0;
-							params.limit = limit;
-							const response = await axios.post(endpoint, params);
-							returnData.push(...response.data.result);
-						} else {
-							// Получаем все записи с пагинацией
-							const allItems = await getAllItems(endpoint, params);
-							returnData.push(...allItems);
-						}
-					}
-					
-					if (operation === 'delete') {
-						const id = this.getNodeParameter('id', i) as string;
-						const endpoint = `${webhookUrl}crm.${resource}.delete.json`;
-						
-						const response = await axios.post(endpoint, { id });
-						returnData.push(response.data);
 					}
 				} catch (error) {
 					if (this.continueOnFail()) {
-						if (error instanceof AxiosError) {
+						if (error instanceof Error) {
 							returnData.push({ error: error.message });
 						} else {
 							returnData.push({ error: 'An unknown error occurred' });
@@ -835,7 +896,7 @@ export class Bitrix24 implements INodeType {
 					throw error;
 				}
 			}
-			
+
 			return [this.helpers.returnJsonArray(returnData)];
 		} catch (error) {
 			if (error instanceof NodeOperationError) {
@@ -844,4 +905,4 @@ export class Bitrix24 implements INodeType {
 			throw new NodeOperationError(this.getNode(), 'Failed to execute node: ' + (error as Error).message);
 		}
 	}
-} 
+}
