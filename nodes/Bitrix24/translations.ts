@@ -123,6 +123,8 @@ export interface ITranslations {
         resources: {
             category: string;
             status: string;
+            department: string;
+            callStatistic: string;
         };
         operations: {
             create: { description: string; action: string; };
@@ -161,6 +163,46 @@ export interface ITranslations {
             process: string;
             success: string;
             failure: string;
+        };
+        departmentFields: {
+            id: string;
+            idDescription: string;
+            name: string;
+            nameDescription: string;
+            sort: string;
+            sortDescription: string;
+            parent: string;
+            parentDescription: string;
+            head: string;
+            headDescription: string;
+        };
+        callFields: {
+            filterType: string;
+            filterTypeDescription: string;
+            filterPhone: string;
+            filterPhoneDescription: string;
+            filterUserId: string;
+            filterUserIdDescription: string;
+            filterDateFrom: string;
+            filterDateFromDescription: string;
+            filterDateTo: string;
+            filterDateToDescription: string;
+            sortField: string;
+            sortFieldDescription: string;
+            sortOrder: string;
+            sortOrderDescription: string;
+        };
+        callTypes: {
+            outbound: string;
+            inbound: string;
+            inboundRedirect: string;
+            callback: string;
+        };
+        callSortFields: {
+            callDuration: string;
+            callStartDate: string;
+            cost: string;
+            id: string;
         };
     };
 
@@ -402,6 +444,8 @@ const ru: ITranslations = {
         resources: {
             category: 'Воронка продаж',
             status: 'Статус воронки',
+            department: 'Подразделение',
+            callStatistic: 'Статистика звонков',
         },
         operations: {
             create: { description: 'Создать элемент', action: 'Создать элемент' },
@@ -440,6 +484,46 @@ const ru: ITranslations = {
             process: 'Процесс',
             success: 'Успех',
             failure: 'Неудача',
+        },
+        departmentFields: {
+            id: 'ID подразделения',
+            idDescription: 'Идентификатор подразделения',
+            name: 'Название',
+            nameDescription: 'Название подразделения',
+            sort: 'Сортировка',
+            sortDescription: 'Порядок сортировки подразделения',
+            parent: 'Родительское подразделение',
+            parentDescription: 'ID родительского подразделения',
+            head: 'Руководитель',
+            headDescription: 'ID пользователя-руководителя подразделения',
+        },
+        callFields: {
+            filterType: 'Тип звонка',
+            filterTypeDescription: 'Фильтр по типу звонка',
+            filterPhone: 'Номер телефона',
+            filterPhoneDescription: 'Фильтр по номеру телефона',
+            filterUserId: 'ID оператора',
+            filterUserIdDescription: 'Фильтр по ID пользователя-оператора',
+            filterDateFrom: 'Дата с',
+            filterDateFromDescription: 'Начало периода фильтрации',
+            filterDateTo: 'Дата по',
+            filterDateToDescription: 'Конец периода фильтрации',
+            sortField: 'Поле сортировки',
+            sortFieldDescription: 'Поле для сортировки результатов',
+            sortOrder: 'Направление сортировки',
+            sortOrderDescription: 'Направление сортировки (по возрастанию/убыванию)',
+        },
+        callTypes: {
+            outbound: 'Исходящий',
+            inbound: 'Входящий',
+            inboundRedirect: 'Входящий с перенаправлением',
+            callback: 'Обратный звонок',
+        },
+        callSortFields: {
+            callDuration: 'Длительность звонка',
+            callStartDate: 'Дата начала звонка',
+            cost: 'Стоимость',
+            id: 'ID',
         },
     },
 
@@ -677,6 +761,8 @@ const en: ITranslations = {
         resources: {
             category: 'Sales Pipeline',
             status: 'Pipeline Status',
+            department: 'Department',
+            callStatistic: 'Call Statistics',
         },
         operations: {
             create: { description: 'Create an item', action: 'Create an item' },
@@ -715,6 +801,46 @@ const en: ITranslations = {
             process: 'In Progress',
             success: 'Success',
             failure: 'Failure',
+        },
+        departmentFields: {
+            id: 'Department ID',
+            idDescription: 'Department identifier',
+            name: 'Name',
+            nameDescription: 'Department name',
+            sort: 'Sort',
+            sortDescription: 'Department sort order',
+            parent: 'Parent Department',
+            parentDescription: 'Parent department ID',
+            head: 'Head',
+            headDescription: 'Head user ID of the department',
+        },
+        callFields: {
+            filterType: 'Call Type',
+            filterTypeDescription: 'Filter by call type',
+            filterPhone: 'Phone Number',
+            filterPhoneDescription: 'Filter by phone number',
+            filterUserId: 'Operator ID',
+            filterUserIdDescription: 'Filter by operator user ID',
+            filterDateFrom: 'Date From',
+            filterDateFromDescription: 'Start of filtering period',
+            filterDateTo: 'Date To',
+            filterDateToDescription: 'End of filtering period',
+            sortField: 'Sort Field',
+            sortFieldDescription: 'Field to sort results by',
+            sortOrder: 'Sort Order',
+            sortOrderDescription: 'Sort direction (ascending/descending)',
+        },
+        callTypes: {
+            outbound: 'Outbound',
+            inbound: 'Inbound',
+            inboundRedirect: 'Inbound with redirect',
+            callback: 'Callback',
+        },
+        callSortFields: {
+            callDuration: 'Call Duration',
+            callStartDate: 'Call Start Date',
+            cost: 'Cost',
+            id: 'ID',
         },
     },
 

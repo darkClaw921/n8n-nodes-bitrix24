@@ -52,6 +52,14 @@ export class Bitrix24Auxiliary implements INodeType {
 						name: getTranslation('smartProcess.resources.type', lang),
 						value: 'smartProcessType',
 					},
+					{
+						name: getTranslation('auxiliary.resources.department', lang),
+						value: 'department',
+					},
+					{
+						name: getTranslation('auxiliary.resources.callStatistic', lang),
+						value: 'callStatistic',
+					},
 				],
 				default: 'category',
 				required: true,
@@ -61,6 +69,11 @@ export class Bitrix24Auxiliary implements INodeType {
 				name: 'operation',
 				type: 'options',
 				noDataExpression: true,
+				displayOptions: {
+					show: {
+						resource: ['category', 'status', 'smartProcessType', 'department'],
+					},
+				},
 				options: [
 					{
 						name: 'Create',
@@ -94,6 +107,26 @@ export class Bitrix24Auxiliary implements INodeType {
 					},
 				],
 				default: 'create',
+			},
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				noDataExpression: true,
+				displayOptions: {
+					show: {
+						resource: ['callStatistic'],
+					},
+				},
+				options: [
+					{
+						name: 'Get All',
+						value: 'getAll',
+						description: getTranslation('auxiliary.operations.getAll.description', lang),
+						action: getTranslation('auxiliary.operations.getAll.action', lang),
+					},
+				],
+				default: 'getAll',
 			},
 			// Поля для воронки продаж
 			{
@@ -240,6 +273,7 @@ export class Bitrix24Auxiliary implements INodeType {
 				default: false,
 				displayOptions: {
 					show: {
+						resource: ['category', 'status'],
 						operation: ['create', 'update'],
 					},
 				},
@@ -359,6 +393,233 @@ export class Bitrix24Auxiliary implements INodeType {
 						],
 					},
 				],
+			},
+			// ===== Поля для подразделений =====
+			{
+				displayName: getTranslation('auxiliary.departmentFields.id', lang),
+				name: 'departmentId',
+				type: 'number',
+				default: 0,
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['department'],
+						operation: ['get', 'update', 'delete'],
+					},
+				},
+				description: getTranslation('auxiliary.departmentFields.idDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.departmentFields.name', lang),
+				name: 'departmentName',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['department'],
+						operation: ['create'],
+					},
+				},
+				description: getTranslation('auxiliary.departmentFields.nameDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.departmentFields.name', lang),
+				name: 'departmentName',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['department'],
+						operation: ['update'],
+					},
+				},
+				description: getTranslation('auxiliary.departmentFields.nameDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.departmentFields.parent', lang),
+				name: 'departmentParent',
+				type: 'number',
+				default: 1,
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['department'],
+						operation: ['create'],
+					},
+				},
+				description: getTranslation('auxiliary.departmentFields.parentDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.departmentFields.parent', lang),
+				name: 'departmentParent',
+				type: 'number',
+				default: 0,
+				displayOptions: {
+					show: {
+						resource: ['department'],
+						operation: ['update'],
+					},
+				},
+				description: getTranslation('auxiliary.departmentFields.parentDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.departmentFields.sort', lang),
+				name: 'departmentSort',
+				type: 'number',
+				default: 500,
+				displayOptions: {
+					show: {
+						resource: ['department'],
+						operation: ['create', 'update'],
+					},
+				},
+				description: getTranslation('auxiliary.departmentFields.sortDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.departmentFields.head', lang),
+				name: 'departmentHead',
+				type: 'number',
+				default: 0,
+				displayOptions: {
+					show: {
+						resource: ['department'],
+						operation: ['create', 'update'],
+					},
+				},
+				description: getTranslation('auxiliary.departmentFields.headDescription', lang),
+			},
+			// ===== Поля фильтрации статистики звонков =====
+			{
+				displayName: getTranslation('auxiliary.callFields.filterType', lang),
+				name: 'callType',
+				type: 'options',
+				options: [
+					{
+						name: getTranslation('auxiliary.callTypes.outbound', lang),
+						value: 1,
+					},
+					{
+						name: getTranslation('auxiliary.callTypes.inbound', lang),
+						value: 2,
+					},
+					{
+						name: getTranslation('auxiliary.callTypes.inboundRedirect', lang),
+						value: 3,
+					},
+					{
+						name: getTranslation('auxiliary.callTypes.callback', lang),
+						value: 4,
+					},
+				],
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['callStatistic'],
+						operation: ['getAll'],
+					},
+				},
+				description: getTranslation('auxiliary.callFields.filterTypeDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.callFields.filterPhone', lang),
+				name: 'callPhone',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['callStatistic'],
+						operation: ['getAll'],
+					},
+				},
+				description: getTranslation('auxiliary.callFields.filterPhoneDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.callFields.filterUserId', lang),
+				name: 'callUserId',
+				type: 'number',
+				default: 0,
+				displayOptions: {
+					show: {
+						resource: ['callStatistic'],
+						operation: ['getAll'],
+					},
+				},
+				description: getTranslation('auxiliary.callFields.filterUserIdDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.callFields.filterDateFrom', lang),
+				name: 'callDateFrom',
+				type: 'dateTime',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['callStatistic'],
+						operation: ['getAll'],
+					},
+				},
+				description: getTranslation('auxiliary.callFields.filterDateFromDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.callFields.filterDateTo', lang),
+				name: 'callDateTo',
+				type: 'dateTime',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['callStatistic'],
+						operation: ['getAll'],
+					},
+				},
+				description: getTranslation('auxiliary.callFields.filterDateToDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.callFields.sortField', lang),
+				name: 'callSortField',
+				type: 'options',
+				options: [
+					{
+						name: getTranslation('auxiliary.callSortFields.callStartDate', lang),
+						value: 'CALL_START_DATE',
+					},
+					{
+						name: getTranslation('auxiliary.callSortFields.callDuration', lang),
+						value: 'CALL_DURATION',
+					},
+					{
+						name: getTranslation('auxiliary.callSortFields.cost', lang),
+						value: 'COST',
+					},
+					{
+						name: getTranslation('auxiliary.callSortFields.id', lang),
+						value: 'ID',
+					},
+				],
+				default: 'CALL_START_DATE',
+				displayOptions: {
+					show: {
+						resource: ['callStatistic'],
+						operation: ['getAll'],
+					},
+				},
+				description: getTranslation('auxiliary.callFields.sortFieldDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.callFields.sortOrder', lang),
+				name: 'callSortOrder',
+				type: 'options',
+				options: [
+					{ name: 'ASC', value: 'ASC' },
+					{ name: 'DESC', value: 'DESC' },
+				],
+				default: 'DESC',
+				displayOptions: {
+					show: {
+						resource: ['callStatistic'],
+						operation: ['getAll'],
+					},
+				},
+				description: getTranslation('auxiliary.callFields.sortOrderDescription', lang),
 			},
 			// ===== Поля для Типа смарт-процесса =====
 			{
@@ -830,6 +1091,104 @@ export class Bitrix24Auxiliary implements INodeType {
 							const statusId = this.getNodeParameter('id', i) as string;
 							const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.status.delete', { id: statusId });
 							returnData.push(response);
+						}
+					}
+
+					if (resource === 'department') {
+						if (operation === 'create') {
+							const name = this.getNodeParameter('departmentName', i) as string;
+							const parent = this.getNodeParameter('departmentParent', i) as number;
+							const sort = this.getNodeParameter('departmentSort', i) as number;
+							const head = this.getNodeParameter('departmentHead', i) as number;
+
+							const params: IDataObject = {
+								NAME: name,
+								PARENT: parent,
+							};
+							if (sort) params.SORT = sort;
+							if (head) params.UF_HEAD = head;
+
+							const response = await bitrix24ApiRequest.call(this, 'POST', 'department.add', params);
+							if (response && response.result !== undefined) {
+								returnData.push({ success: true, ID: response.result });
+							}
+						}
+
+						if (operation === 'update') {
+							const id = this.getNodeParameter('departmentId', i) as number;
+							const name = this.getNodeParameter('departmentName', i, '') as string;
+							const parent = this.getNodeParameter('departmentParent', i, 0) as number;
+							const sort = this.getNodeParameter('departmentSort', i, 0) as number;
+							const head = this.getNodeParameter('departmentHead', i, 0) as number;
+
+							const params: IDataObject = { ID: id };
+							if (name) params.NAME = name;
+							if (parent) params.PARENT = parent;
+							if (sort) params.SORT = sort;
+							if (head) params.UF_HEAD = head;
+
+							const response = await bitrix24ApiRequest.call(this, 'POST', 'department.update', params);
+							if (response && response.result !== undefined) {
+								returnData.push({ success: true, ID: id });
+							}
+						}
+
+						if (operation === 'get') {
+							const id = this.getNodeParameter('departmentId', i) as number;
+							const response = await bitrix24ApiRequest.call(this, 'POST', 'department.get', { ID: id });
+							if (response && response.result) {
+								const departments = Array.isArray(response.result) ? response.result : [response.result];
+								if (departments.length > 0) {
+									returnData.push(departments[0] as IDataObject);
+								}
+							}
+						}
+
+						if (operation === 'getAll') {
+							const response = await bitrix24ApiRequest.call(this, 'POST', 'department.get', {});
+							if (response && response.result) {
+								const departments = Array.isArray(response.result) ? response.result : [response.result];
+								returnData.push(...departments as IDataObject[]);
+							}
+						}
+
+						if (operation === 'delete') {
+							const id = this.getNodeParameter('departmentId', i) as number;
+							const response = await bitrix24ApiRequest.call(this, 'POST', 'department.delete', { ID: id });
+							if (response && response.result !== undefined) {
+								returnData.push({ success: true, ID: id });
+							}
+						}
+					}
+
+					if (resource === 'callStatistic') {
+						if (operation === 'getAll') {
+							const callType = this.getNodeParameter('callType', i, '') as number | string;
+							const callPhone = this.getNodeParameter('callPhone', i, '') as string;
+							const callUserId = this.getNodeParameter('callUserId', i, 0) as number;
+							const callDateFrom = this.getNodeParameter('callDateFrom', i, '') as string;
+							const callDateTo = this.getNodeParameter('callDateTo', i, '') as string;
+							const sortField = this.getNodeParameter('callSortField', i, 'CALL_START_DATE') as string;
+							const sortOrder = this.getNodeParameter('callSortOrder', i, 'DESC') as string;
+
+							const filter: IDataObject = {};
+							if (callType) filter.CALL_TYPE = callType;
+							if (callPhone) filter.PHONE_NUMBER = callPhone;
+							if (callUserId) filter.PORTAL_USER_ID = callUserId;
+							if (callDateFrom) filter['>CALL_START_DATE'] = callDateFrom;
+							if (callDateTo) filter['<CALL_START_DATE'] = callDateTo;
+
+							const params: IDataObject = {
+								FILTER: filter,
+								SORT: sortField,
+								ORDER: sortOrder,
+							};
+
+							const response = await bitrix24ApiRequest.call(this, 'POST', 'voximplant.statistic.get', params);
+							if (response && response.result) {
+								const calls = Array.isArray(response.result) ? response.result : [response.result];
+								returnData.push(...calls as IDataObject[]);
+							}
 						}
 					}
 

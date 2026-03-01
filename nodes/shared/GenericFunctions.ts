@@ -86,6 +86,22 @@ export async function bitrix24ApiRequest(
 			lastError = error as Error;
 			const msg = lastError.message || '';
 
+			// Extract error details from HTTP error responses (e.g. 400, 403)
+			const httpError = error as any;
+			if (httpError.cause?.code || httpError.description || httpError.error) {
+				const errorDescription = httpError.description || httpError.error_description || httpError.error || msg;
+				throw new NodeOperationError(
+					this.getNode(),
+					`Bitrix24 API error: ${errorDescription}`,
+				);
+			}
+			if (msg.includes('status code 400') || msg.includes('status code 403') || msg.includes('status code 401')) {
+				throw new NodeOperationError(
+					this.getNode(),
+					`Bitrix24 API error: ${msg}. Check that the webhook has the required scope and parameters are correct.`,
+				);
+			}
+
 			const isTransient =
 				msg.includes('ECONNRESET') ||
 				msg.includes('ECONNREFUSED') ||
