@@ -627,7 +627,7 @@ export class Bitrix24 implements INodeType {
 				try {
 					if (resource === 'smartProcess') {
 						// ===== Smart Process Items (crm.item.*) =====
-						const entityTypeId = this.getNodeParameter('entityTypeId', i) as number;
+						const entityTypeId = Number(this.getNodeParameter('entityTypeId', i));
 
 						if (operation === 'create' || operation === 'update') {
 							const inputFormat = this.getNodeParameter('inputFormat', i) as string;

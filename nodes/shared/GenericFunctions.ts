@@ -56,6 +56,8 @@ export async function bitrix24ApiRequest(
 
 	if (body !== undefined && Object.keys(body).length > 0) {
 		options.body = body as unknown as IHttpRequestOptions['body'];
+	} else if (method === 'POST') {
+		options.body = {} as unknown as IHttpRequestOptions['body'];
 	}
 
 	const maxRetries = 2;
