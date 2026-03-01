@@ -264,6 +264,26 @@ export interface ITranslations {
             isRecyclebinEnabledDescription: string;
             isMycompanyEnabled: string;
             isMycompanyEnabledDescription: string;
+            createFields: string;
+            createFieldsDescription: string;
+            customFields: string;
+            customFieldsDescription: string;
+            ufFieldName: string;
+            ufFieldNameDescription: string;
+            ufFieldLabel: string;
+            ufFieldLabelDescription: string;
+            ufFieldType: string;
+            ufFieldTypeDescription: string;
+            ufMultiple: string;
+            ufMultipleDescription: string;
+            ufMandatory: string;
+            ufMandatoryDescription: string;
+            ufShowFilter: string;
+            ufShowFilterDescription: string;
+            ufListValues: string;
+            ufListValuesDescription: string;
+            ufValue: string;
+            ufValueDescription: string;
         };
     };
 }
@@ -521,6 +541,26 @@ const ru: ITranslations = {
             isRecyclebinEnabledDescription: 'Включить корзину (удалённые элементы)',
             isMycompanyEnabled: 'Моя компания',
             isMycompanyEnabledDescription: 'Включить привязку своей компании',
+            createFields: 'Создать поля',
+            createFieldsDescription: 'Создать пользовательские поля для смарт-процесса',
+            customFields: 'Пользовательские поля',
+            customFieldsDescription: 'Список пользовательских полей для создания',
+            ufFieldName: 'Код поля',
+            ufFieldNameDescription: 'Суффикс кода поля (будет добавлен к UF_CRM_{id}_)',
+            ufFieldLabel: 'Название поля',
+            ufFieldLabelDescription: 'Отображаемое название поля',
+            ufFieldType: 'Тип поля',
+            ufFieldTypeDescription: 'Тип пользовательского поля',
+            ufMultiple: 'Множественное',
+            ufMultipleDescription: 'Множественное поле',
+            ufMandatory: 'Обязательное',
+            ufMandatoryDescription: 'Обязательное поле',
+            ufShowFilter: 'Показывать в фильтре',
+            ufShowFilterDescription: 'Показывать поле в фильтре',
+            ufListValues: 'Значения списка',
+            ufListValuesDescription: 'Значения через запятую (для типа "Список")',
+            ufValue: 'Значение',
+            ufValueDescription: 'Значение элемента списка',
         },
     },
 };
@@ -776,6 +816,26 @@ const en: ITranslations = {
             isRecyclebinEnabledDescription: 'Enable recycle bin (deleted items)',
             isMycompanyEnabled: 'My Company',
             isMycompanyEnabledDescription: 'Enable own company binding',
+            createFields: 'Create Fields',
+            createFieldsDescription: 'Create custom fields for the smart process',
+            customFields: 'Custom Fields',
+            customFieldsDescription: 'List of custom fields to create',
+            ufFieldName: 'Field Code',
+            ufFieldNameDescription: 'Field code suffix (will be prefixed with UF_CRM_{id}_)',
+            ufFieldLabel: 'Field Label',
+            ufFieldLabelDescription: 'Display name of the field',
+            ufFieldType: 'Field Type',
+            ufFieldTypeDescription: 'User field type',
+            ufMultiple: 'Multiple',
+            ufMultipleDescription: 'Multiple field',
+            ufMandatory: 'Mandatory',
+            ufMandatoryDescription: 'Mandatory field',
+            ufShowFilter: 'Show in Filter',
+            ufShowFilterDescription: 'Show field in filter',
+            ufListValues: 'List Values',
+            ufListValuesDescription: 'Comma-separated values (for "List" type)',
+            ufValue: 'Value',
+            ufValueDescription: 'List item value',
         },
     },
 };

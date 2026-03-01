@@ -498,6 +498,109 @@ export class Bitrix24Auxiliary implements INodeType {
 				displayOptions: { show: { resource: ['smartProcessType'], operation: ['create', 'update'] } },
 				description: getTranslation('smartProcess.fields.isMycompanyEnabledDescription', lang),
 			},
+			// ===== Создание пользовательских полей при создании смарт-процесса =====
+			{
+				displayName: getTranslation('smartProcess.fields.createFields', lang),
+				name: 'createFields',
+				type: 'boolean',
+				default: false,
+				displayOptions: {
+					show: {
+						resource: ['smartProcessType'],
+						operation: ['create'],
+					},
+				},
+				description: getTranslation('smartProcess.fields.createFieldsDescription', lang),
+			},
+			{
+				displayName: getTranslation('smartProcess.fields.customFields', lang),
+				name: 'customFields',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+					sortable: true,
+				},
+				displayOptions: {
+					show: {
+						resource: ['smartProcessType'],
+						operation: ['create'],
+						createFields: [true],
+					},
+				},
+				description: getTranslation('smartProcess.fields.customFieldsDescription', lang),
+				default: {},
+				options: [
+					{
+						name: 'fields',
+						displayName: getTranslation('smartProcess.fields.customFields', lang),
+						values: [
+							{
+								displayName: getTranslation('smartProcess.fields.ufFieldName', lang),
+								name: 'fieldName',
+								type: 'string',
+								default: '',
+								required: true,
+								description: getTranslation('smartProcess.fields.ufFieldNameDescription', lang),
+							},
+							{
+								displayName: getTranslation('smartProcess.fields.ufFieldLabel', lang),
+								name: 'fieldLabel',
+								type: 'string',
+								default: '',
+								required: true,
+								description: getTranslation('smartProcess.fields.ufFieldLabelDescription', lang),
+							},
+							{
+								displayName: getTranslation('smartProcess.fields.ufFieldType', lang),
+								name: 'userTypeId',
+								type: 'options',
+								options: [
+									{ name: getTranslation('userField.fieldTypes.string', lang), value: 'string' },
+									{ name: getTranslation('userField.fieldTypes.integer', lang), value: 'integer' },
+									{ name: getTranslation('userField.fieldTypes.double', lang), value: 'double' },
+									{ name: getTranslation('userField.fieldTypes.boolean', lang), value: 'boolean' },
+									{ name: getTranslation('userField.fieldTypes.enumeration', lang), value: 'enumeration' },
+									{ name: getTranslation('userField.fieldTypes.date', lang), value: 'date' },
+									{ name: getTranslation('userField.fieldTypes.datetime', lang), value: 'datetime' },
+									{ name: getTranslation('userField.fieldTypes.file', lang), value: 'file' },
+									{ name: getTranslation('userField.fieldTypes.money', lang), value: 'money' },
+									{ name: getTranslation('userField.fieldTypes.url', lang), value: 'url' },
+								],
+								default: 'string',
+								description: getTranslation('smartProcess.fields.ufFieldTypeDescription', lang),
+							},
+							{
+								displayName: getTranslation('smartProcess.fields.ufMultiple', lang),
+								name: 'multiple',
+								type: 'boolean',
+								default: false,
+								description: getTranslation('smartProcess.fields.ufMultipleDescription', lang),
+							},
+							{
+								displayName: getTranslation('smartProcess.fields.ufMandatory', lang),
+								name: 'mandatory',
+								type: 'boolean',
+								default: false,
+								description: getTranslation('smartProcess.fields.ufMandatoryDescription', lang),
+							},
+							{
+								displayName: getTranslation('smartProcess.fields.ufShowFilter', lang),
+								name: 'showFilter',
+								type: 'boolean',
+								default: true,
+								description: getTranslation('smartProcess.fields.ufShowFilterDescription', lang),
+							},
+							{
+								displayName: getTranslation('smartProcess.fields.ufListValues', lang),
+								name: 'listValues',
+								type: 'string',
+								default: '',
+								description: getTranslation('smartProcess.fields.ufListValuesDescription', lang),
+							},
+						],
+					},
+				],
+			},
 		],
 	};
 
@@ -752,7 +855,65 @@ export class Bitrix24Auxiliary implements INodeType {
 							if (operation === 'create') {
 								const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.type.add', { fields });
 								if (response && response.result) {
-									returnData.push(response.result.type || response.result);
+									const createdType = response.result.type || response.result;
+									const typeId = createdType.id;
+
+									// Create user fields if enabled
+									const createFields = this.getNodeParameter('createFields', i, false) as boolean;
+									if (createFields && typeId) {
+										const customFieldsData = this.getNodeParameter('customFields.fields', i, []) as IDataObject[];
+										const createdFields: IDataObject[] = [];
+
+										for (const uf of customFieldsData) {
+											const fieldCode = `UF_CRM_${typeId}_${(uf.fieldName as string).toUpperCase()}`;
+											const ufParams: IDataObject = {
+												moduleId: 'crm',
+												field: {
+													entityId: `CRM_${typeId}`,
+													fieldName: fieldCode,
+													userTypeId: uf.userTypeId || 'string',
+													multiple: uf.multiple ? 'Y' : 'N',
+													mandatory: uf.mandatory ? 'Y' : 'N',
+													showFilter: uf.showFilter !== false ? 'Y' : 'N',
+													editFormLabel: { ru: uf.fieldLabel, en: uf.fieldLabel },
+												} as IDataObject,
+											};
+
+											// Handle enumeration type
+											if (uf.userTypeId === 'enumeration' && uf.listValues) {
+												const values = (uf.listValues as string).split(',').map((v: string) => v.trim());
+												((ufParams.field as IDataObject).enum as IDataObject[]) = values.map((val: string, idx: number) => ({
+													value: val,
+													def: 'N',
+													sort: (idx + 1) * 100,
+												}));
+											}
+
+											let ufResponse: any;
+											for (let attempt = 0; attempt < 4; attempt++) {
+												try {
+													ufResponse = await bitrix24ApiRequest.call(
+														this, 'POST', 'userfieldconfig.add', ufParams,
+													);
+													break;
+												} catch (err) {
+													if (attempt < 2) {
+														await new Promise(resolve => setTimeout(resolve, 3000));
+													} else {
+														throw err;
+													}
+												}
+											}
+											createdFields.push(ufResponse.result || ufResponse);
+										}
+
+										returnData.push({
+											...createdType,
+											createdFields,
+										});
+									} else {
+										returnData.push(createdType);
+									}
 								}
 							} else {
 								const id = this.getNodeParameter('smartProcessId', i) as number;

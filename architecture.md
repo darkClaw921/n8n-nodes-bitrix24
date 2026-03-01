@@ -98,6 +98,7 @@ n8n-nodes-bitrix24/
 - Настройка семантики статусов (P — процесс, S — успех, F — неудача)
 - Цвет статуса в HEX-формате
 - Управление типами смарт-процессов: 12 feature toggle полей (стадии, категории, клиент, автоматизация и др.)
+- Создание пользовательских полей при создании смарт-процесса (`userfieldconfig.add` с `moduleId: "crm"`, `entityId: "CRM_{entityTypeId}"`). Поддержка 10 типов полей (string, integer, double, boolean, enumeration, date, datetime, file, money, url), настройки множественности, обязательности, фильтра, а также значений списка для типа enumeration
 - i18n поддержка (ru/en) через `translations.ts` (секции `auxiliary`, `smartProcess`)
 
 ### 3. Bitrix24 User Field (`nodes/Bitrix24UserField/Bitrix24UserField.node.ts`)
