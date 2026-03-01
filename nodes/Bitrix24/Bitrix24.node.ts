@@ -20,6 +20,7 @@ import { Lead } from './Lead';
 import { Deal } from './Deal';
 import { Contact } from './Contact';
 import { Company } from './Company';
+import { Product } from './Product';
 // Импорт модуля переводов
 import { applyTranslations, detectLanguage, getTranslation } from './translations';
 
@@ -55,6 +56,7 @@ export class Bitrix24 implements INodeType {
 					Deal.getDescription(),
 					Contact.getDescription(),
 					Company.getDescription(),
+					Product.getDescription(),
 					{
 						name: 'Smart Process',
 						value: 'smartProcess',

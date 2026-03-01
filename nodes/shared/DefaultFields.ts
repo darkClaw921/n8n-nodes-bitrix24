@@ -2,6 +2,7 @@ import { Lead } from '../Bitrix24/Lead';
 import { Deal } from '../Bitrix24/Deal';
 import { Contact } from '../Bitrix24/Contact';
 import { Company } from '../Bitrix24/Company';
+import { Product } from '../Bitrix24/Product';
 
 /**
  * Map of resource identifiers to their default field arrays.
@@ -12,6 +13,7 @@ const DEFAULT_FIELDS: Record<string, string[]> = {
 	[Deal.resource]: Deal.getDefaultFields(),
 	[Contact.resource]: Contact.getDefaultFields(),
 	[Company.resource]: Company.getDefaultFields(),
+	[Product.resource]: Product.getDefaultFields(),
 };
 
 /**

@@ -38,7 +38,7 @@ export interface IEnumValue {
 	value: string;
 }
 
-export type BitrixResourceType = 'lead' | 'deal' | 'contact' | 'company';
+export type BitrixResourceType = 'lead' | 'deal' | 'contact' | 'company' | 'product';
 
 export interface IFieldCollection {
 	fieldName: string;

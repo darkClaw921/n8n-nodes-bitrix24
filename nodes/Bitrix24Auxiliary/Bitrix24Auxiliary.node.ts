@@ -60,6 +60,14 @@ export class Bitrix24Auxiliary implements INodeType {
 						name: getTranslation('auxiliary.resources.callStatistic', lang),
 						value: 'callStatistic',
 					},
+					{
+						name: getTranslation('auxiliary.resources.task', lang),
+						value: 'task',
+					},
+					{
+						name: getTranslation('auxiliary.resources.productRow', lang),
+						value: 'productRow',
+					},
 				],
 				default: 'category',
 				required: true,
@@ -71,7 +79,7 @@ export class Bitrix24Auxiliary implements INodeType {
 				noDataExpression: true,
 				displayOptions: {
 					show: {
-						resource: ['category', 'status', 'smartProcessType', 'department'],
+						resource: ['category', 'status', 'smartProcessType', 'department', 'task', 'productRow'],
 					},
 				},
 				options: [
@@ -862,6 +870,547 @@ export class Bitrix24Auxiliary implements INodeType {
 					},
 				],
 			},
+			// ===== Поля для задач (Task) =====
+			{
+				displayName: getTranslation('auxiliary.taskFields.id', lang),
+				name: 'taskId',
+				type: 'number',
+				default: 0,
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['get', 'update', 'delete'],
+					},
+				},
+				description: getTranslation('auxiliary.taskFields.idDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.taskFields.inputFormat', lang),
+				name: 'taskInputFormat',
+				type: 'options',
+				options: [
+					{
+						name: getTranslation('inputFormats.form', lang),
+						value: 'form',
+						description: getTranslation('inputFormats.formDescription', lang),
+					},
+					{
+						name: getTranslation('inputFormats.json', lang),
+						value: 'json',
+						description: getTranslation('inputFormats.jsonDescription', lang),
+					},
+				],
+				default: 'form',
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['create', 'update'],
+					},
+				},
+			},
+			{
+				displayName: getTranslation('auxiliary.taskFields.fieldsJson', lang),
+				name: 'taskFieldsJson',
+				type: 'json',
+				default: '{}',
+				description: getTranslation('auxiliary.taskFields.fieldsJsonDescription', lang),
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['create', 'update'],
+						taskInputFormat: ['json'],
+					},
+				},
+			},
+			{
+				displayName: getTranslation('auxiliary.taskFields.title', lang),
+				name: 'taskTitle',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['create'],
+						taskInputFormat: ['form'],
+					},
+				},
+				description: getTranslation('auxiliary.taskFields.titleDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.taskFields.title', lang),
+				name: 'taskTitle',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['update'],
+						taskInputFormat: ['form'],
+					},
+				},
+				description: getTranslation('auxiliary.taskFields.titleDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.taskFields.responsibleId', lang),
+				name: 'taskResponsibleId',
+				type: 'number',
+				default: 0,
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['create'],
+						taskInputFormat: ['form'],
+					},
+				},
+				description: getTranslation('auxiliary.taskFields.responsibleIdDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.taskFields.responsibleId', lang),
+				name: 'taskResponsibleId',
+				type: 'number',
+				default: 0,
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['update'],
+						taskInputFormat: ['form'],
+					},
+				},
+				description: getTranslation('auxiliary.taskFields.responsibleIdDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.taskFields.createdBy', lang),
+				name: 'taskCreatedBy',
+				type: 'number',
+				default: 0,
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['create', 'update'],
+						taskInputFormat: ['form'],
+					},
+				},
+				description: getTranslation('auxiliary.taskFields.createdByDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.taskFields.description', lang),
+				name: 'taskDescription',
+				type: 'string',
+				typeOptions: {
+					rows: 4,
+				},
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['create', 'update'],
+						taskInputFormat: ['form'],
+					},
+				},
+				description: getTranslation('auxiliary.taskFields.descriptionDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.taskFields.priority', lang),
+				name: 'taskPriority',
+				type: 'options',
+				options: [
+					{
+						name: getTranslation('auxiliary.taskPriorities.low', lang),
+						value: 0,
+					},
+					{
+						name: getTranslation('auxiliary.taskPriorities.medium', lang),
+						value: 1,
+					},
+					{
+						name: getTranslation('auxiliary.taskPriorities.high', lang),
+						value: 2,
+					},
+				],
+				default: 1,
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['create', 'update'],
+						taskInputFormat: ['form'],
+					},
+				},
+				description: getTranslation('auxiliary.taskFields.priorityDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.taskFields.deadline', lang),
+				name: 'taskDeadline',
+				type: 'dateTime',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['create', 'update'],
+						taskInputFormat: ['form'],
+					},
+				},
+				description: getTranslation('auxiliary.taskFields.deadlineDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.taskFields.groupId', lang),
+				name: 'taskGroupId',
+				type: 'number',
+				default: 0,
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['create', 'update'],
+						taskInputFormat: ['form'],
+					},
+				},
+				description: getTranslation('auxiliary.taskFields.groupIdDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.taskFields.ufCrmTask', lang),
+				name: 'taskUfCrmTask',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['create', 'update'],
+						taskInputFormat: ['form'],
+					},
+				},
+				description: getTranslation('auxiliary.taskFields.ufCrmTaskDescription', lang),
+			},
+			// Task list fields
+			{
+				displayName: getTranslation('fields.returnAll', lang),
+				name: 'taskReturnAll',
+				type: 'boolean',
+				default: false,
+				description: getTranslation('fields.returnAllDescription', lang),
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['getAll'],
+					},
+				},
+			},
+			{
+				displayName: getTranslation('fields.limit', lang),
+				name: 'taskLimit',
+				type: 'number',
+				default: 50,
+				description: getTranslation('fields.limitDescription', lang),
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['getAll'],
+						taskReturnAll: [false],
+					},
+				},
+			},
+			{
+				displayName: getTranslation('fields.useFilter', lang),
+				name: 'taskUseFilter',
+				type: 'boolean',
+				default: false,
+				description: getTranslation('fields.useFilterDescription', lang),
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['getAll'],
+					},
+				},
+			},
+			{
+				displayName: getTranslation('auxiliary.taskFields.filterFields', lang),
+				name: 'taskFilterFields',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+					sortable: true,
+				},
+				placeholder: getTranslation('auxiliary.taskFields.filterFieldsPlaceholder', lang),
+				default: {},
+				options: [
+					{
+						name: 'field',
+						displayName: getTranslation('fields.fields', lang),
+						values: [
+							{
+								displayName: getTranslation('fields.fieldName', lang),
+								name: 'fieldName',
+								type: 'string',
+								default: '',
+								description: getTranslation('fields.filterFieldNameDescription', lang),
+							},
+							{
+								displayName: getTranslation('fields.filterOperation', lang),
+								name: 'operation',
+								type: 'options',
+								options: [
+									{ name: getTranslation('filterOperations.equals', lang), value: 'equals' },
+									{ name: getTranslation('filterOperations.notEquals', lang), value: '!=' },
+									{ name: getTranslation('filterOperations.greaterThan', lang), value: '>' },
+									{ name: getTranslation('filterOperations.greaterThanOrEqual', lang), value: '>=' },
+									{ name: getTranslation('filterOperations.lessThan', lang), value: '<' },
+									{ name: getTranslation('filterOperations.lessThanOrEqual', lang), value: '<=' },
+								],
+								default: 'equals',
+								description: getTranslation('filterOperations.operationDescription', lang),
+							},
+							{
+								displayName: getTranslation('fields.filterValue', lang),
+								name: 'value',
+								type: 'string',
+								default: '',
+								description: getTranslation('fields.filterValueDescription', lang),
+							},
+						],
+					},
+				],
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['getAll'],
+						taskUseFilter: [true],
+					},
+				},
+			},
+			// ===== Поля для товарных позиций (Product Row) =====
+			{
+				displayName: getTranslation('auxiliary.productRowFields.id', lang),
+				name: 'productRowId',
+				type: 'number',
+				default: 0,
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['productRow'],
+						operation: ['get', 'update', 'delete'],
+					},
+				},
+				description: getTranslation('auxiliary.productRowFields.idDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.productRowFields.ownerType', lang),
+				name: 'productRowOwnerType',
+				type: 'options',
+				options: [
+					{
+						name: getTranslation('auxiliary.productRowFields.ownerTypeDeal', lang),
+						value: 'D',
+					},
+					{
+						name: getTranslation('auxiliary.productRowFields.ownerTypeLead', lang),
+						value: 'L',
+					},
+					{
+						name: getTranslation('auxiliary.productRowFields.ownerTypeQuote', lang),
+						value: 'Q',
+					},
+					{
+						name: getTranslation('auxiliary.productRowFields.ownerTypeSmartProcess', lang),
+						value: 'T',
+					},
+				],
+				default: 'D',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['productRow'],
+						operation: ['create', 'getAll'],
+					},
+				},
+				description: getTranslation('auxiliary.productRowFields.ownerTypeDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.productRowFields.ownerId', lang),
+				name: 'productRowOwnerId',
+				type: 'number',
+				default: 0,
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['productRow'],
+						operation: ['create', 'getAll'],
+					},
+				},
+				description: getTranslation('auxiliary.productRowFields.ownerIdDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.productRowFields.inputFormat', lang),
+				name: 'productRowInputFormat',
+				type: 'options',
+				options: [
+					{
+						name: getTranslation('inputFormats.form', lang),
+						value: 'form',
+						description: getTranslation('inputFormats.formDescription', lang),
+					},
+					{
+						name: getTranslation('inputFormats.json', lang),
+						value: 'json',
+						description: getTranslation('inputFormats.jsonDescription', lang),
+					},
+				],
+				default: 'form',
+				displayOptions: {
+					show: {
+						resource: ['productRow'],
+						operation: ['create', 'update'],
+					},
+				},
+			},
+			{
+				displayName: getTranslation('auxiliary.productRowFields.fieldsJson', lang),
+				name: 'productRowFieldsJson',
+				type: 'json',
+				default: '{}',
+				description: getTranslation('auxiliary.productRowFields.fieldsJsonDescription', lang),
+				displayOptions: {
+					show: {
+						resource: ['productRow'],
+						operation: ['create', 'update'],
+						productRowInputFormat: ['json'],
+					},
+				},
+			},
+			{
+				displayName: getTranslation('auxiliary.productRowFields.productId', lang),
+				name: 'productRowProductId',
+				type: 'number',
+				default: 0,
+				displayOptions: {
+					show: {
+						resource: ['productRow'],
+						operation: ['create', 'update'],
+						productRowInputFormat: ['form'],
+					},
+				},
+				description: getTranslation('auxiliary.productRowFields.productIdDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.productRowFields.productName', lang),
+				name: 'productRowProductName',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['productRow'],
+						operation: ['create', 'update'],
+						productRowInputFormat: ['form'],
+					},
+				},
+				description: getTranslation('auxiliary.productRowFields.productNameDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.productRowFields.price', lang),
+				name: 'productRowPrice',
+				type: 'number',
+				default: 0,
+				typeOptions: {
+					numberPrecision: 2,
+				},
+				displayOptions: {
+					show: {
+						resource: ['productRow'],
+						operation: ['create', 'update'],
+						productRowInputFormat: ['form'],
+					},
+				},
+				description: getTranslation('auxiliary.productRowFields.priceDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.productRowFields.quantity', lang),
+				name: 'productRowQuantity',
+				type: 'number',
+				default: 1,
+				typeOptions: {
+					numberPrecision: 2,
+				},
+				displayOptions: {
+					show: {
+						resource: ['productRow'],
+						operation: ['create', 'update'],
+						productRowInputFormat: ['form'],
+					},
+				},
+				description: getTranslation('auxiliary.productRowFields.quantityDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.productRowFields.discountType', lang),
+				name: 'productRowDiscountTypeId',
+				type: 'options',
+				options: [
+					{
+						name: getTranslation('auxiliary.productRowFields.discountTypeAbsolute', lang),
+						value: 1,
+					},
+					{
+						name: getTranslation('auxiliary.productRowFields.discountTypePercent', lang),
+						value: 2,
+					},
+				],
+				default: 2,
+				displayOptions: {
+					show: {
+						resource: ['productRow'],
+						operation: ['create', 'update'],
+						productRowInputFormat: ['form'],
+					},
+				},
+				description: getTranslation('auxiliary.productRowFields.discountTypeDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.productRowFields.discountRate', lang),
+				name: 'productRowDiscountRate',
+				type: 'number',
+				default: 0,
+				typeOptions: {
+					numberPrecision: 2,
+				},
+				displayOptions: {
+					show: {
+						resource: ['productRow'],
+						operation: ['create', 'update'],
+						productRowInputFormat: ['form'],
+					},
+				},
+				description: getTranslation('auxiliary.productRowFields.discountRateDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.productRowFields.taxRate', lang),
+				name: 'productRowTaxRate',
+				type: 'number',
+				default: 0,
+				typeOptions: {
+					numberPrecision: 2,
+				},
+				displayOptions: {
+					show: {
+						resource: ['productRow'],
+						operation: ['create', 'update'],
+						productRowInputFormat: ['form'],
+					},
+				},
+				description: getTranslation('auxiliary.productRowFields.taxRateDescription', lang),
+			},
+			{
+				displayName: getTranslation('auxiliary.productRowFields.taxIncluded', lang),
+				name: 'productRowTaxIncluded',
+				type: 'boolean',
+				default: false,
+				displayOptions: {
+					show: {
+						resource: ['productRow'],
+						operation: ['create', 'update'],
+						productRowInputFormat: ['form'],
+					},
+				},
+				description: getTranslation('auxiliary.productRowFields.taxIncludedDescription', lang),
+			},
 		],
 	};
 
@@ -1189,6 +1738,209 @@ export class Bitrix24Auxiliary implements INodeType {
 								const calls = Array.isArray(response.result) ? response.result : [response.result];
 								returnData.push(...calls as IDataObject[]);
 							}
+						}
+					}
+
+					if (resource === 'task') {
+						if (operation === 'create' || operation === 'update') {
+							const inputFormat = this.getNodeParameter('taskInputFormat', i) as string;
+							let fields: IDataObject = {};
+
+							if (inputFormat === 'json') {
+								fields = JSON.parse(this.getNodeParameter('taskFieldsJson', i) as string);
+							} else {
+								const title = this.getNodeParameter('taskTitle', i, '') as string;
+								const responsibleId = this.getNodeParameter('taskResponsibleId', i, 0) as number;
+								const createdBy = this.getNodeParameter('taskCreatedBy', i, 0) as number;
+								const description = this.getNodeParameter('taskDescription', i, '') as string;
+								const priority = this.getNodeParameter('taskPriority', i, 1) as number;
+								const deadline = this.getNodeParameter('taskDeadline', i, '') as string;
+								const groupId = this.getNodeParameter('taskGroupId', i, 0) as number;
+								const ufCrmTask = this.getNodeParameter('taskUfCrmTask', i, '') as string;
+
+								if (title) fields.TITLE = title;
+								if (responsibleId) fields.RESPONSIBLE_ID = responsibleId;
+								if (createdBy) fields.CREATED_BY = createdBy;
+								if (description) fields.DESCRIPTION = description;
+								fields.PRIORITY = priority;
+								if (deadline) fields.DEADLINE = deadline;
+								if (groupId) fields.GROUP_ID = groupId;
+								if (ufCrmTask) {
+									fields.UF_CRM_TASK = ufCrmTask.split(',').map((s: string) => s.trim());
+								}
+							}
+
+							if (operation === 'create') {
+								const response = await bitrix24ApiRequest.call(this, 'POST', 'tasks.task.add', { fields });
+								if (response && response.result && response.result.task) {
+									returnData.push(response.result.task as IDataObject);
+								} else if (response && response.result) {
+									returnData.push(response.result as IDataObject);
+								}
+							} else {
+								const taskId = this.getNodeParameter('taskId', i) as number;
+								const response = await bitrix24ApiRequest.call(this, 'POST', 'tasks.task.update', { taskId, fields });
+								if (response && response.result && response.result.task) {
+									returnData.push(response.result.task as IDataObject);
+								} else if (response && response.result) {
+									returnData.push(response.result as IDataObject);
+								}
+							}
+						}
+
+						if (operation === 'get') {
+							const taskId = this.getNodeParameter('taskId', i) as number;
+							const response = await bitrix24ApiRequest.call(this, 'POST', 'tasks.task.get', { taskId });
+							if (response && response.result && response.result.task) {
+								returnData.push(response.result.task as IDataObject);
+							} else if (response && response.result) {
+								returnData.push(response.result as IDataObject);
+							}
+						}
+
+						if (operation === 'getAll') {
+							const returnAll = this.getNodeParameter('taskReturnAll', i) as boolean;
+							const useFilter = this.getNodeParameter('taskUseFilter', i) as boolean;
+
+							const params: IDataObject = {};
+							if (useFilter) {
+								const filterFields = this.getNodeParameter('taskFilterFields.field', i, []) as Array<{
+									fieldName: string;
+									operation: string;
+									value: string;
+								}>;
+								if (filterFields.length > 0) {
+									const filter: IDataObject = {};
+									for (const f of filterFields) {
+										if (f.operation === 'equals') {
+											filter[f.fieldName] = f.value;
+										} else if (f.operation === '!=') {
+											filter[`!${f.fieldName}`] = f.value;
+										} else {
+											filter[`${f.operation}${f.fieldName}`] = f.value;
+										}
+									}
+									params.filter = filter;
+								}
+							}
+
+							if (returnAll) {
+								let start = 0;
+								const batchSize = 50;
+								let hasMore = true;
+								while (hasMore) {
+									const batchParams: IDataObject = { ...params, start };
+									const response = await bitrix24ApiRequest.call(this, 'POST', 'tasks.task.list', batchParams);
+									const tasks = response?.result?.tasks;
+									if (!Array.isArray(tasks) || tasks.length === 0) {
+										break;
+									}
+									returnData.push(...tasks as IDataObject[]);
+									if (tasks.length < batchSize) {
+										hasMore = false;
+									} else {
+										start += batchSize;
+										await new Promise(resolve => setTimeout(resolve, 1000));
+									}
+								}
+							} else {
+								const limit = this.getNodeParameter('taskLimit', i) as number;
+								params.start = 0;
+								const response = await bitrix24ApiRequest.call(this, 'POST', 'tasks.task.list', params);
+								if (response?.result?.tasks && Array.isArray(response.result.tasks)) {
+									returnData.push(...(response.result.tasks as IDataObject[]).slice(0, limit));
+								}
+							}
+						}
+
+						if (operation === 'delete') {
+							const taskId = this.getNodeParameter('taskId', i) as number;
+							await bitrix24ApiRequest.call(this, 'POST', 'tasks.task.delete', { taskId });
+							returnData.push({ success: true, id: taskId });
+						}
+					}
+
+					if (resource === 'productRow') {
+						if (operation === 'create' || operation === 'update') {
+							const inputFormat = this.getNodeParameter('productRowInputFormat', i) as string;
+							let fields: IDataObject = {};
+
+							if (inputFormat === 'json') {
+								fields = JSON.parse(this.getNodeParameter('productRowFieldsJson', i) as string);
+							} else {
+								const productId = this.getNodeParameter('productRowProductId', i, 0) as number;
+								const productName = this.getNodeParameter('productRowProductName', i, '') as string;
+								const price = this.getNodeParameter('productRowPrice', i, 0) as number;
+								const quantity = this.getNodeParameter('productRowQuantity', i, 1) as number;
+								const discountTypeId = this.getNodeParameter('productRowDiscountTypeId', i, 2) as number;
+								const discountRate = this.getNodeParameter('productRowDiscountRate', i, 0) as number;
+								const taxRate = this.getNodeParameter('productRowTaxRate', i, 0) as number;
+								const taxIncluded = this.getNodeParameter('productRowTaxIncluded', i, false) as boolean;
+
+								if (productId) fields.productId = productId;
+								if (productName) fields.productName = productName;
+								if (price) fields.price = price;
+								fields.quantity = quantity;
+								fields.discountTypeId = discountTypeId;
+								if (discountRate) fields.discountRate = discountRate;
+								if (taxRate) fields.taxRate = taxRate;
+								fields.taxIncluded = taxIncluded ? 'Y' : 'N';
+							}
+
+							if (operation === 'create') {
+								const ownerType = this.getNodeParameter('productRowOwnerType', i) as string;
+								const ownerId = this.getNodeParameter('productRowOwnerId', i) as number;
+								fields.ownerId = ownerId;
+								fields.ownerType = ownerType;
+
+								const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.item.productrow.add', { fields });
+								if (response?.result?.productRow) {
+									returnData.push(response.result.productRow as IDataObject);
+								} else if (response?.result) {
+									returnData.push(response.result as IDataObject);
+								}
+							} else {
+								const id = this.getNodeParameter('productRowId', i) as number;
+								const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.item.productrow.update', { id, fields });
+								if (response?.result?.productRow) {
+									returnData.push(response.result.productRow as IDataObject);
+								} else if (response?.result) {
+									returnData.push(response.result as IDataObject);
+								}
+							}
+						}
+
+						if (operation === 'get') {
+							const id = this.getNodeParameter('productRowId', i) as number;
+							const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.item.productrow.get', { id });
+							if (response?.result?.productRow) {
+								returnData.push(response.result.productRow as IDataObject);
+							} else if (response?.result) {
+								returnData.push(response.result as IDataObject);
+							}
+						}
+
+						if (operation === 'getAll') {
+							const ownerType = this.getNodeParameter('productRowOwnerType', i) as string;
+							const ownerId = this.getNodeParameter('productRowOwnerId', i) as number;
+							const response = await bitrix24ApiRequest.call(this, 'POST', 'crm.item.productrow.list', {
+								filter: {
+									'=ownerType': ownerType,
+									'=ownerId': ownerId,
+								},
+							});
+							if (response?.result?.productRows && Array.isArray(response.result.productRows)) {
+								returnData.push(...response.result.productRows as IDataObject[]);
+							} else if (response?.result) {
+								const result = Array.isArray(response.result) ? response.result : [response.result];
+								returnData.push(...result as IDataObject[]);
+							}
+						}
+
+						if (operation === 'delete') {
+							const id = this.getNodeParameter('productRowId', i) as number;
+							await bitrix24ApiRequest.call(this, 'POST', 'crm.item.productrow.delete', { id });
+							returnData.push({ success: true, id });
 						}
 					}
 

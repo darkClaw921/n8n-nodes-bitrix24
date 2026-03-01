@@ -19,32 +19,36 @@
 ![example](example.png)
 
 ## Функциональность
-- Bitrix24 - работа с основными сущностями (Lead, Deal, Contact, Company)
-- Bitrix24Auxiliary - работа с вспомогательными сущностями (Category, Status)
-- Bitrix24UserField - работа с пользовательскими полями
-### Поддерживаемые сущности (Resources)
+
+Пакет содержит три ноды:
+
+### Bitrix24
+Работа с основными CRM-сущностями и смарт-процессами.
+
+**Сущности:**
 - Lead (Лиды)
 - Deal (Сделки)
 - Contact (Контакты)
 - Company (Компании)
+- Product (Товары)
+- Smart Process Item (Элементы смарт-процессов)
 
-### Операции
-- Create (Создание записи)
-  - Выбор поля из списка доступных
-  - Установка значения поля
-- Get (Получение записи)
-  - Получение по ID
-  - Выбор возвращаемых полей
-- List (Получение списка)
-  - Возможность получить все записи
-  - Ограничение количества записей
-  - Выбор возвращаемых полей
-- Update (Обновление)
-  - Обновление по ID
-  - Выбор поля из списка доступных
-  - Установка нового значения
-- Delete (Удаление)
-  - Удаление по ID
+**Операции:** Create, Get, List, Update, Delete
+
+### Bitrix24Auxiliary
+Работа с вспомогательными сущностями.
+
+**Сущности:**
+- Category (Воронки/направления)
+- Status (Стадии/статусы)
+- Smart Process Type (Типы смарт-процессов)
+- Department (Отделы)
+- Task (Задачи)
+- Product Row (Товарные позиции)
+- Call Statistic (Статистика звонков, только чтение)
+
+### Bitrix24UserField
+Работа с пользовательскими полями для Lead, Deal, Contact, Company.
 
 ### Особенности
 
@@ -53,9 +57,6 @@
 - При обновлении поля типа enumeration, можно указать просто текст элемента, а не ID
 - Поддержка пагинации при получении списка записей
 - Обработка ошибок и возможность продолжить выполнение при ошибках
-- Создание и обновление пользовательских полей
-- Поддержка категорий и статусов для сделок (но не все операции, смотрите как есть)
--
 ## Разработка
 
 ### Добавление нового языка
@@ -76,11 +77,31 @@ docker run -it --rm \
   --name n8n \
   -p 5678:5678 \
   -v n8n_data:/home/node/.n8n \
-  -v  /{path_to_n8n_nodes}/n8n-nodes-bitrix24/dist:/home/node/.n8n/custom/node_modules//n8n-nodes-bitrix24 \ docker.n8n.io/n8nio/n8n
+  -v /{path_to_n8n_nodes}/n8n-nodes-bitrix24/dist:/home/node/.n8n/custom/node_modules/n8n-nodes-bitrix24 \
+  docker.n8n.io/n8nio/n8n
 ```
-  -v -подключаем ноды
 
+### Интеграционные тесты
 
+Тесты проверяют CRUD-операции всех сущностей через реальный Bitrix24 портал.
+
+```bash
+# 1. Скопировать и заполнить .env.test
+cp .env.test.example .env.test
+# Вписать BITRIX24_WEBHOOK_URL
+
+# 2. Установить зависимости
+npm install
+
+# 3. Запустить все тесты (116 тестов, 17 сьютов)
+npm run test:integration
+
+# 4. Или по группам
+npm run test:integration:crm           # Lead, Deal, Contact, Company, Product
+npm run test:integration:auxiliary      # Category, Status, SP Type, Department, Task, Product Row, Call Stat
+npm run test:integration:smart-process  # Smart Process Item
+npm run test:integration:userfields     # User Fields (Lead, Deal, Contact, Company)
+```
 
 ## Лицензия
 

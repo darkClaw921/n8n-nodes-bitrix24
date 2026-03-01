@@ -15,6 +15,7 @@ export interface ITranslations {
         deal: string;
         contact: string;
         company: string;
+        product: string;
         smartProcess: string;
     };
     
@@ -125,6 +126,8 @@ export interface ITranslations {
             status: string;
             department: string;
             callStatistic: string;
+            task: string;
+            productRow: string;
         };
         operations: {
             create: { description: string; action: string; };
@@ -203,6 +206,69 @@ export interface ITranslations {
             callStartDate: string;
             cost: string;
             id: string;
+        };
+        taskFields: {
+            id: string;
+            idDescription: string;
+            title: string;
+            titleDescription: string;
+            responsibleId: string;
+            responsibleIdDescription: string;
+            createdBy: string;
+            createdByDescription: string;
+            description: string;
+            descriptionDescription: string;
+            priority: string;
+            priorityDescription: string;
+            deadline: string;
+            deadlineDescription: string;
+            groupId: string;
+            groupIdDescription: string;
+            ufCrmTask: string;
+            ufCrmTaskDescription: string;
+            filterFields: string;
+            filterFieldsPlaceholder: string;
+            fieldsJson: string;
+            fieldsJsonDescription: string;
+            inputFormat: string;
+        };
+        taskPriorities: {
+            low: string;
+            medium: string;
+            high: string;
+        };
+        productRowFields: {
+            id: string;
+            idDescription: string;
+            ownerType: string;
+            ownerTypeDescription: string;
+            ownerId: string;
+            ownerIdDescription: string;
+            ownerTypeDeal: string;
+            ownerTypeLead: string;
+            ownerTypeQuote: string;
+            ownerTypeSmartProcess: string;
+            productId: string;
+            productIdDescription: string;
+            productName: string;
+            productNameDescription: string;
+            price: string;
+            priceDescription: string;
+            quantity: string;
+            quantityDescription: string;
+            discountType: string;
+            discountTypeDescription: string;
+            discountTypeAbsolute: string;
+            discountTypePercent: string;
+            discountRate: string;
+            discountRateDescription: string;
+            taxRate: string;
+            taxRateDescription: string;
+            taxIncluded: string;
+            taxIncludedDescription: string;
+            fieldsJson: string;
+            fieldsJsonDescription: string;
+            inputFormat: string;
         };
     };
 
@@ -342,6 +408,7 @@ const ru: ITranslations = {
         deal: 'Сделка',
         contact: 'Контакт',
         company: 'Компания',
+        product: 'Товар',
         smartProcess: 'Смарт-процесс',
     },
     
@@ -446,6 +513,8 @@ const ru: ITranslations = {
             status: 'Статус воронки',
             department: 'Подразделение',
             callStatistic: 'Статистика звонков',
+            task: 'Задача',
+            productRow: 'Товарная позиция',
         },
         operations: {
             create: { description: 'Создать элемент', action: 'Создать элемент' },
@@ -524,6 +593,69 @@ const ru: ITranslations = {
             callStartDate: 'Дата начала звонка',
             cost: 'Стоимость',
             id: 'ID',
+        },
+        taskFields: {
+            id: 'ID задачи',
+            idDescription: 'Идентификатор задачи',
+            title: 'Название',
+            titleDescription: 'Название задачи',
+            responsibleId: 'Ответственный',
+            responsibleIdDescription: 'ID ответственного пользователя',
+            createdBy: 'Постановщик',
+            createdByDescription: 'ID пользователя-постановщика задачи',
+            description: 'Описание',
+            descriptionDescription: 'Описание задачи',
+            priority: 'Приоритет',
+            priorityDescription: 'Приоритет задачи',
+            deadline: 'Крайний срок',
+            deadlineDescription: 'Крайний срок выполнения задачи',
+            groupId: 'ID группы',
+            groupIdDescription: 'ID рабочей группы (проекта)',
+            ufCrmTask: 'Привязка к CRM',
+            ufCrmTaskDescription: 'Привязки к CRM-сущностям через запятую (например: D_5,L_1,C_10)',
+            filterFields: 'Поля фильтра',
+            filterFieldsPlaceholder: 'Добавить поле фильтра',
+            fieldsJson: 'Поля (JSON)',
+            fieldsJsonDescription: 'Поля задачи в формате JSON',
+            inputFormat: 'Формат ввода',
+        },
+        taskPriorities: {
+            low: 'Низкий',
+            medium: 'Средний',
+            high: 'Высокий',
+        },
+        productRowFields: {
+            id: 'ID товарной позиции',
+            idDescription: 'Идентификатор товарной позиции',
+            ownerType: 'Тип владельца',
+            ownerTypeDescription: 'Тип CRM-сущности, к которой привязана позиция',
+            ownerId: 'ID владельца',
+            ownerIdDescription: 'ID CRM-сущности, к которой привязана позиция',
+            ownerTypeDeal: 'Сделка',
+            ownerTypeLead: 'Лид',
+            ownerTypeQuote: 'Предложение',
+            ownerTypeSmartProcess: 'Смарт-процесс',
+            productId: 'ID товара',
+            productIdDescription: 'ID товара из каталога',
+            productName: 'Название товара',
+            productNameDescription: 'Название товарной позиции',
+            price: 'Цена',
+            priceDescription: 'Цена за единицу',
+            quantity: 'Количество',
+            quantityDescription: 'Количество единиц',
+            discountType: 'Тип скидки',
+            discountTypeDescription: 'Тип скидки (абсолютная или процентная)',
+            discountTypeAbsolute: 'Абсолютная',
+            discountTypePercent: 'Процентная',
+            discountRate: 'Размер скидки',
+            discountRateDescription: 'Размер скидки',
+            taxRate: 'Ставка налога',
+            taxRateDescription: 'Ставка налога в процентах',
+            taxIncluded: 'Налог включён',
+            taxIncludedDescription: 'Налог включён в цену',
+            fieldsJson: 'Поля (JSON)',
+            fieldsJsonDescription: 'Поля товарной позиции в формате JSON',
+            inputFormat: 'Формат ввода',
         },
     },
 
@@ -659,6 +791,7 @@ const en: ITranslations = {
         deal: 'Deal',
         contact: 'Contact',
         company: 'Company',
+        product: 'Product',
         smartProcess: 'Smart Process',
     },
     
@@ -763,6 +896,8 @@ const en: ITranslations = {
             status: 'Pipeline Status',
             department: 'Department',
             callStatistic: 'Call Statistics',
+            task: 'Task',
+            productRow: 'Product Row',
         },
         operations: {
             create: { description: 'Create an item', action: 'Create an item' },
@@ -841,6 +976,69 @@ const en: ITranslations = {
             callStartDate: 'Call Start Date',
             cost: 'Cost',
             id: 'ID',
+        },
+        taskFields: {
+            id: 'Task ID',
+            idDescription: 'Task identifier',
+            title: 'Title',
+            titleDescription: 'Task title',
+            responsibleId: 'Responsible',
+            responsibleIdDescription: 'Responsible user ID',
+            createdBy: 'Created By',
+            createdByDescription: 'Creator user ID',
+            description: 'Description',
+            descriptionDescription: 'Task description',
+            priority: 'Priority',
+            priorityDescription: 'Task priority',
+            deadline: 'Deadline',
+            deadlineDescription: 'Task deadline',
+            groupId: 'Group ID',
+            groupIdDescription: 'Work group (project) ID',
+            ufCrmTask: 'CRM Binding',
+            ufCrmTaskDescription: 'CRM entity bindings separated by comma (e.g.: D_5,L_1,C_10)',
+            filterFields: 'Filter Fields',
+            filterFieldsPlaceholder: 'Add Filter Field',
+            fieldsJson: 'Fields (JSON)',
+            fieldsJsonDescription: 'Task fields in JSON format',
+            inputFormat: 'Input Format',
+        },
+        taskPriorities: {
+            low: 'Low',
+            medium: 'Medium',
+            high: 'High',
+        },
+        productRowFields: {
+            id: 'Product Row ID',
+            idDescription: 'Product row identifier',
+            ownerType: 'Owner Type',
+            ownerTypeDescription: 'CRM entity type the product row is bound to',
+            ownerId: 'Owner ID',
+            ownerIdDescription: 'CRM entity ID the product row is bound to',
+            ownerTypeDeal: 'Deal',
+            ownerTypeLead: 'Lead',
+            ownerTypeQuote: 'Quote',
+            ownerTypeSmartProcess: 'Smart Process',
+            productId: 'Product ID',
+            productIdDescription: 'Catalog product ID',
+            productName: 'Product Name',
+            productNameDescription: 'Product row name',
+            price: 'Price',
+            priceDescription: 'Price per unit',
+            quantity: 'Quantity',
+            quantityDescription: 'Number of units',
+            discountType: 'Discount Type',
+            discountTypeDescription: 'Discount type (absolute or percentage)',
+            discountTypeAbsolute: 'Absolute',
+            discountTypePercent: 'Percentage',
+            discountRate: 'Discount Rate',
+            discountRateDescription: 'Discount rate',
+            taxRate: 'Tax Rate',
+            taxRateDescription: 'Tax rate in percent',
+            taxIncluded: 'Tax Included',
+            taxIncludedDescription: 'Tax included in price',
+            fieldsJson: 'Fields (JSON)',
+            fieldsJsonDescription: 'Product row fields in JSON format',
+            inputFormat: 'Input Format',
         },
     },
 
